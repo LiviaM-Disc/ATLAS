@@ -53,7 +53,7 @@ class Receita (models.Model):
 
 class Despesa (models.Model):
     valor_despesa=models.DecimalField(max_digits=10,decimal_places=2,verbose_name="Valor")
-    data_depesa=models.DateField(verbose_name="Data")
+    data_despesa=models.DateField(verbose_name="Data")
     descricao_despesa=models.CharField(max_length=150,verbose_name="Descrição da Despesa")
     status=models.CharField(max_length=100,verbose_name= "Status")
 
@@ -61,17 +61,17 @@ class Despesa (models.Model):
     negocio=models.ForeignKey(Negocio, on_delete=models.CASCADE,verbose_name="Negócio")
 
     def __str__(self):
-        return f"{self.valor_despesa},{self.data_depesa},{self.descricao_despesa},{self.status}"
+        return f"{self.valor_despesa},{self.data_despesa},{self.descricao_despesa},{self.status}"
     class Meta:
         verbose_name="Despesa"
         verbose_name_plural="Despesas"
 
 
 class Produto (models.Model):
-    nome=models.CharField(max_length=100,verbose_name="Valor")
+    nome=models.CharField(max_length=100,verbose_name="Nome")
     custo=models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Custo")
     preco_venda=models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Preço da Venda")
-    estoque=models.CharField(max_length=100,verbose_name= "Estoque")
+    estoque=models.IntegerField(verbose_name= "Estoque")
 
     categoria=models.ForeignKey(Categoria,on_delete=models.CASCADE, verbose_name="Categoria")
     negocio=models.ForeignKey(Negocio, on_delete=models.CASCADE,verbose_name="Negócio")
@@ -79,8 +79,8 @@ class Produto (models.Model):
     def __str__(self):
         return f"{self.nome},{self.custo},{self.preco_venda},{self.estoque}"
     class Meta:
-        verbose_name="Estoque"
-        verbose_name_plural="Estoques"
+        verbose_name="Produto"
+        verbose_name_plural="Produtos"
 
 class Servico (models.Model):
     nome_servico=models.CharField(max_length=100,verbose_name="Nome")
@@ -115,7 +115,7 @@ class Precificacao (models.Model):
 class Relatorio (models.Model):
     tipo_relatorio=models.CharField(max_length=25,verbose_name="Tipo de Relatório")
     periodo=models.DateField(verbose_name="Periodo")
-    data_geracao=models.DateField(max_length=150,verbose_name="Data de Geração")
+    data_geracao=models.DateField(verbose_name="Data de Geração")
 
     negocio=models.ForeignKey(Negocio, on_delete=models.CASCADE,verbose_name="Negócio")
 
@@ -182,7 +182,7 @@ class Notificacao (models.Model):
 
 class IndicadorFinanceiro (models.Model):
     margem_lucro=models.DecimalField(max_digits=10,decimal_places=2,verbose_name="Margem de Lucro")
-    ponto_equilibrio=models.DecimalField(max_digits=10,decimal_places=2,verbose_name="Data")
+    ponto_equilibrio=models.DecimalField(max_digits=10,decimal_places=2,verbose_name="Ponto de Equilibrio")
     
     negocio=models.ForeignKey(Negocio, on_delete=models.CASCADE,verbose_name="Negócio")
 
