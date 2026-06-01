@@ -99,7 +99,7 @@ class Servico (models.Model):
 
 class Precificacao (models.Model):
     custo_total=models.DecimalField(max_digits=10,decimal_places=2,verbose_name="Valor")
-    margem_lucros=models.DecimalField(max_digits=10,decimal_places=2,verbose_name="Margem de lucro")
+    margem_lucro=models.DecimalField(max_digits=10,decimal_places=2,verbose_name="Margem de lucro")
     impostos=models.DecimalField(max_digits=10, decimal_places=2,verbose_name="Impostos")
     preco_final=models.DecimalField(max_digits=100,decimal_places=2,verbose_name= "Preço Final")
 

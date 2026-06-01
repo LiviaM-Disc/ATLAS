@@ -1,6 +1,14 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from .models import *
+from decimal import Decimal
+
+from django.db.models import Sum
+from django.shortcuts import render
 from django.views import View
+from rest_framework import viewsets
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+from .models import *
+from .serializers import *
 
 
 class IndexView(View):
@@ -8,91 +16,119 @@ class IndexView(View):
         return render(request, 'index.html')
 
 
-class UsuariosView(View):
-    def get(self, request, *args, **kwargs):
-        usuarios = Usuario.objects.all()
-        return render(request, 'usuarios.html', {'usuarios': usuarios})
+class UsuarioViewSet(viewsets.ModelViewSet):
+    queryset = Usuario.objects.all()
+    serializer_class = UsuarioSerializer
 
 
-class NegociosView(View):
-    def get(self, request, *args, **kwargs):
-        negocios = Negocio.objects.all()
-        return render(request, 'negocios.html', {'negocios': negocios})
+class NegocioViewSet(viewsets.ModelViewSet):
+    queryset = Negocio.objects.all()
+    serializer_class = NegocioSerializer
 
 
-class CategoriasView(View):
-    def get(self, request, *args, **kwargs):
-        categorias = Categoria.objects.all()
-        return render(request, 'categorias.html', {'categorias': categorias})
+class CategoriaViewSet(viewsets.ModelViewSet):
+    queryset = Categoria.objects.all()
+    serializer_class = CategoriaSerializer
 
 
-class ReceitasView(View):
-    def get(self, request, *args, **kwargs):
-        receitas = Receita.objects.all()
-        return render(request, 'receitas.html', {'receitas': receitas})
+class ReceitaViewSet(viewsets.ModelViewSet):
+    queryset = Receita.objects.all()
+    serializer_class = ReceitaSerializer
 
 
-class DespesasView(View):
-    def get(self, request, *args, **kwargs):
-        despesas = Despesa.objects.all()
-        return render(request, 'despesas.html', {'despesas': despesas})
+class DespesaViewSet(viewsets.ModelViewSet):
+    queryset = Despesa.objects.all()
+    serializer_class = DespesaSerializer
 
 
-class ProdutosView(View):
-    def get(self, request, *args, **kwargs):
-        produtos = Produto.objects.all()
-        return render(request, 'produtos.html', {'produtos': produtos})
+class ProdutoViewSet(viewsets.ModelViewSet):
+    queryset = Produto.objects.all()
+    serializer_class = ProdutoSerializer
 
 
-class ServicosView(View):
-    def get(self, request, *args, **kwargs):
-        servicos = Servico.objects.all()
-        return render(request, 'servicos.html', {'servicos': servicos})
+class ServicoViewSet(viewsets.ModelViewSet):
+    queryset = Servico.objects.all()
+    serializer_class = ServicoSerializer
 
 
-class PrecificacoesView(View):
-    def get(self, request, *args, **kwargs):
-        precificacoes = Precificacao.objects.all()
-        return render(request, 'precificacoes.html', {'precificacoes': precificacoes})
+class PrecificacaoViewSet(viewsets.ModelViewSet):
+    queryset = Precificacao.objects.all()
+    serializer_class = PrecificacaoSerializer
 
 
-class RelatoriosView(View):
-    def get(self, request, *args, **kwargs):
-        relatorios = Relatorio.objects.all()
-        return render(request, 'relatorios.html', {'relatorios': relatorios})
+class RelatorioViewSet(viewsets.ModelViewSet):
+    queryset = Relatorio.objects.all()
+    serializer_class = RelatorioSerializer
 
 
-class MetasView(View):
-    def get(self, request, *args, **kwargs):
-        metas = MetaFinanceira.objects.all()
-        return render(request, 'metas.html', {'metas': metas})
+class MetaFinanceiraViewSet(viewsets.ModelViewSet):
+    queryset = MetaFinanceira.objects.all()
+    serializer_class = MetaFinanceiraSerializer
 
 
-class AlertasView(View):
-    def get(self, request, *args, **kwargs):
-        alertas = Alerta.objects.all()
-        return render(request, 'alertas.html', {'alertas': alertas})
+class AlertaViewSet(viewsets.ModelViewSet):
+    queryset = Alerta.objects.all()
+    serializer_class = AlertaSerializer
 
 
-class FechamentosMensaisView(View):
-    def get(self, request, *args, **kwargs):
-        fechamentos = FechamentoMensal.objects.all()
-        return render(request, 'fechamentos.html', {'fechamentos': fechamentos})
+class FechamentoMensalViewSet(viewsets.ModelViewSet):
+    queryset = FechamentoMensal.objects.all()
+    serializer_class = FechamentoMensalSerializer
 
 
-class NotificacoesView(View):
-    def get(self, request, *args, **kwargs):
-        notificacoes = Notificacao.objects.all()
-        return render(request, 'notificacoes.html', {'notificacoes': notificacoes})
+class NotificacaoViewSet(viewsets.ModelViewSet):
+    queryset = Notificacao.objects.all()
+    serializer_class = NotificacaoSerializer
 
 
-class IndicadoresFinanceirosView(View):
-    def get(self, request, *args, **kwargs):
-        indicadores = IndicadorFinanceiro.objects.all()
-        return render(request, 'indicadores.html', {'indicadores': indicadores})
+class IndicadorFinanceiroViewSet(viewsets.ModelViewSet):
+    queryset = IndicadorFinanceiro.objects.all()
+    serializer_class = IndicadorFinanceiroSerializer
 
 
-class DashboardsView(View):
-    def get(self, request, *args, **kwargs):
-        dashboards = Dashboard.objects.all()
-        return render(request, 'dashboards.html', {'dashboards': dashboards})
+class DashboardViewSet(viewsets.ModelViewSet):
+    queryset = Dashboard.objects.all()
+    serializer_class = DashboardSerializer
+
+
+def total(queryset, campo):
+    return queryset.aggregate(total=Sum(campo))['total'] or Decimal('0.00')
+
+
+@api_view(['GET'])
+def resumo_financeiro(request, negocio_id):
+    receitas = total(Receita.objects.filter(negocio_id=negocio_id), 'valor')
+    despesas = total(Despesa.objects.filter(negocio_id=negocio_id), 'valor_despesa')
+    lucro = receitas - despesas
+
+    margem_lucro = Decimal('0.00')
+    if receitas > 0:
+        margem_lucro = (lucro / receitas) * 100
+
+    return Response({
+        'receitas': receitas,
+        'despesas': despesas,
+        'lucro': lucro,
+        'margem_lucro': round(margem_lucro, 2),
+    })
+
+
+@api_view(['POST'])
+def simular_precificacao(request):
+    custo_total = Decimal(str(request.data.get('custo_total', 0)))
+    margem_lucro = Decimal(str(request.data.get('margem_lucro', 0)))
+    impostos = Decimal(str(request.data.get('impostos', 0)))
+
+    divisor = Decimal('1.00') - ((margem_lucro + impostos) / 100)
+
+    if divisor <= 0:
+        return Response({'erro': 'Margem + impostos não podem ser 100% ou mais.'}, status=400)
+
+    preco_final = custo_total / divisor
+
+    return Response({
+        'custo_total': custo_total,
+        'margem_lucro': margem_lucro,
+        'impostos': impostos,
+        'preco_final': round(preco_final, 2),
+    })
