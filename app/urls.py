@@ -19,6 +19,8 @@ from .views import (
     UsuarioViewSet,
     resumo_financeiro,
     simular_precificacao,
+    cadastro_usuario,
+    login_usuario,
 )
 
 router = DefaultRouter()
@@ -43,4 +45,6 @@ urlpatterns = [
     path('', include(router.urls)),
     path('financeiro/negocios/<int:negocio_id>/resumo/', resumo_financeiro),
     path('financeiro/precificacao/simular/', simular_precificacao),
+    path('auth/cadastro/', cadastro_usuario),
+    path('auth/login/', login_usuario),
 ]

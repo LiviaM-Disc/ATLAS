@@ -107,7 +107,7 @@ class Precificacao (models.Model):
     servico=models.ForeignKey(Servico, on_delete=models.CASCADE,verbose_name="Servico")
 
     def __str__(self):
-        return f"{self.custo_total},{self.margem_lucros},{self.impostos},{self.preco_final}"
+        return f"{self.custo_total},{self.margem_lucro},{self.impostos},{self.preco_final}"
     class Meta:
         verbose_name="Precificação"
         verbose_name_plural="Precificações"
