@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}ATLAS - Novo negócio{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <div>
+        <h1>Novo negócio</h1>
+        <p>Cadastre uma empresa, atividade autônoma ou operação financeira.</p>
+    </div>
+    <div class="actions">
+        <a class="btn secondary" href="{% url 'listar_negocios' %}">Voltar</a>
+    </div>
+</header>
+
+<section class="form-panel">
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-grid">
+            <div>
+                <label for="nome_negocio">Nome do negócio</label>
+                <input id="nome_negocio" name="nome_negocio" required placeholder="Ex.: Atelier da Lívia">
+            </div>
+            <div>
+                <label for="segmento">Segmento</label>
+                <input id="segmento" name="segmento" required placeholder="Ex.: Artesanato">
+            </div>
+            <div>
+                <label for="meta_mensal">Meta mensal</label>
+                <input id="meta_mensal" name="meta_mensal" type="number" min="0" step="0.01" placeholder="0,00">
+            </div>
+            <div>
+                <label for="capital_inicial">Capital inicial</label>
+                <input id="capital_inicial" name="capital_inicial" type="number" min="0" step="0.01" placeholder="0,00">
+            </div>
+        </div>
+        <div class="actions" style="margin-top: 18px;">
+            <button type="submit">Salvar negócio</button>
+        </div>
+    </form>
+</section>
+{% endblock %}

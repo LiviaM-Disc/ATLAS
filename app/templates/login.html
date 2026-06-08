@@ -1,52 +1,44 @@
-<!DOCTYPE html>
+{% load static %}
+<!doctype html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atlas - Login</title>
-    <link rel="stylesheet" href="/static/CSS/login.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Playfair+Display:wght@500;700&display=swap" rel="stylesheet">
+    <title>ATLAS - Login</title>
+    <link rel="stylesheet" href="{% static 'CSS/login.css' %}">
 </head>
 <body>
-    <div class="container">
-        <div class="left-panel">
-            <img src="/static/images/atlas_logo_negative.png" class="logo" alt="Atlas Logo">
-            <h1>Transformamos dados em lucro e decisões estratégicas.</h1>
-            <p>Plataforma inteligente para gestão financeira, análise de desempenho e crescimento empresarial.</p>
-        </div>
+    <main class="auth-shell">
+        <section class="brand-panel">
+            <img src="{% static 'images/atlas_logo_negative.png' %}" class="logo" alt="ATLAS">
+            <h1>Transforme dados em decisões de negócio.</h1>
+            <p>Controle receitas, despesas, produtos, metas e relatórios em uma única plataforma para pequenos negócios.</p>
+        </section>
 
-        <div class="right-panel">
-            <div class="login-card">
-                <h2>Bem-vindo</h2>
-                
-               <form method="POST" action="{% url 'login' %}">
-    {% csrf_token %}
-    
-    <div class="input-group">
-        <label>Email</label>
-        <input type="email" name="email" required placeholder="seu@email.com">
-    </div>
+        <section class="auth-panel">
+            <form class="auth-card" method="post" action="{% url 'login' %}">
+                {% csrf_token %}
+                <h2>Entrar</h2>
+                <p class="muted">Acesse o painel financeiro da sua empresa.</p>
 
-    <div class="input-group">
-        <label>Senha</label>
-        <input type="password" name="senha" required placeholder="******">
-    </div>
+                {% if messages %}
+                    <div class="auth-messages">
+                        {% for message in messages %}
+                            <p>{{ message }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
 
-    <button type="submit">Entrar</button>
-    <div style="margin-top: 20px; text-align: center;">
-        <p>Não tem uma conta?</p>
-        <a href="{% url 'cadastro' %}" class="btn-secondary">Cadastre-se agora</a>
-    </div>
+                <label for="email">E-mail</label>
+                <input id="email" type="email" name="email" required placeholder="seu@email.com">
 
-    {% if messages %}
-        {% for message in messages %}
-            <p style="color: #ff4d4d; text-align: center;">{{ message }}</p>
-        {% endfor %}
-    {% endif %}
-</form>
-            </div>
-        </div>
-    </div>
-    
-    </body>
+                <label for="senha">Senha</label>
+                <input id="senha" type="password" name="senha" required placeholder="Digite sua senha">
+
+                <button type="submit">Entrar</button>
+                <p class="auth-link">Não tem uma conta? <a href="{% url 'cadastro' %}">Cadastre-se</a></p>
+            </form>
+        </section>
+    </main>
+</body>
 </html>

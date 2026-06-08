@@ -1,67 +1,188 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATLAS - Dashboard</title>
-    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
-<body>
-    <div class="wrapper">
-        <nav id="sidebar">
-            <div class="sidebar-header">
-                <img src="{% static 'images/atlas_logo_negative.png' %}" alt="Logo Atlas" class="logo">
-            </div>
+{% extends "base.html" %}
 
-            <ul class="list-unstyled components">
-                <li class="active"><a href="#"><i class="fas fa-home"></i> Home</a></li>
-                <li><a href="#"><i class="fas fa-chart-line"></i> Negócios</a></li>
-                <li><a href="#"><i class="fas fa-wallet"></i> Financeiro</a></li>
-                <li><a href="#"><i class="fas fa-box"></i> Produtos</a></li>
-            </ul>
+{% block title %}ATLAS - Home{% endblock %}
 
-            <div class="user-footer">
-                <p>Olá, <strong>{{ nome }}</strong></p>
-                <a href="{% url 'logout' %}" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</a>
-            </div>
-        </nav>
+{% block content %}
+<header class="page-header">
+    <div>
+        <h1>Visão geral</h1>
+        <p>Olá, {{ nome }}. Acompanhe os principais números dos seus negócios.</p>
+    </div>
 
-        <div id="content">
-            <header class="main-header">
-                <h2>Visão Geral</h2>
-            </header>
+    <div class="actions">
+        <a class="btn" href="{% url 'cadastrar_negocio' %}">
+            <i class="fa-solid fa-plus"></i> Novo negócio
+        </a>
+        <a class="btn secondary" href="{% url 'relatorios' %}">
+            <i class="fa-solid fa-chart-pie"></i> Relatórios
+        </a>
+    </div>
+</header>
 
-            <div class="dashboard-cards">
-    <div class="card receita">
-        <div class="card-icon"><i class="fas fa-arrow-up"></i></div>
+<section class="metric-grid">
+    <article class="metric-card receita">
+        <div class="card-icon"><i class="fa-solid fa-arrow-up"></i></div>
         <div>
             <span class="label">Receitas</span>
-            <h3 class="value">R$ 0,00</h3>
+            <strong class="value">{{ total_receitas }}</strong>
         </div>
-    </div>
+    </article>
 
-    <div class="card despesa">
-        <div class="card-icon"><i class="fas fa-arrow-down"></i></div>
+    <article class="metric-card despesa">
+        <div class="card-icon"><i class="fa-solid fa-arrow-down"></i></div>
         <div>
             <span class="label">Despesas</span>
-            <h3 class="value">R$ 0,00</h3>
+            <strong class="value">{{ total_despesas }}</strong>
         </div>
-    </div>
-</div>
-        </div>
-        <div class="dashboard-content">
-    <div class="charts-container">
-        <div class="chart-card">
-            <h3>Fluxo de Caixa (Receitas vs Despesas)</h3>
-            <canvas id="meuGraficoFinanceiro"></canvas>
-        </div>
-    </div>
-</div>
+    </article>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <article class="metric-card saldo">
+        <div class="card-icon"><i class="fa-solid fa-wallet"></i></div>
+        <div>
+            <span class="label">Saldo estimado</span>
+            <strong class="value">{{ saldo }}</strong>
+        </div>
+    </article>
+
+    <article class="metric-card info">
+        <div class="card-icon"><i class="fa-solid fa-briefcase"></i></div>
+        <div>
+            <span class="label">Negócios</span>
+            <strong class="value">{{ qtd_negocios }}</strong>
+        </div>
+    </article>
+</section>
+
+<section class="dashboard-layout">
+    <div class="chart-card">
+        <h2>Resumo financeiro</h2>
+        <canvas id="financeChart"></canvas>
     </div>
-</body>
-</html>
+
+    <div class="panel">
+        <h2>Atalhos</h2>
+        <div class="actions">
+            <a class="btn secondary" href="{% url 'receitas' %}">Receitas</a>
+            <a class="btn secondary" href="{% url 'despesas' %}">Despesas</a>
+            <a class="btn secondary" href="{% url 'produtos' %}">Produtos</a>
+            <a class="btn secondary" href="{% url 'precificacoes' %}">Precificação</a>
+            <a class="btn secondary" href="{% url 'metas' %}">Metas</a>
+            <a class="btn secondary" href="{% url 'alertas' %}">Alertas</a>
+        </div>
+    </div>
+</section>
+
+<section class="dashboard-layout">
+    <div class="panel">
+        <h2>Últimas receitas</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Descrição</th>
+                        <th>Negócio</th>
+                        <th>Data</th>
+                        <th>Valor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for receita in ultimas_receitas %}
+                        <tr>
+                            <td>{{ receita.descricao }}</td>
+                            <td>{{ receita.negocio.nome_negocio }}</td>
+                            <td>{{ receita.data|date:"d/m/Y" }}</td>
+                            <td>R$ {{ receita.valor }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="empty-state">
+                                Nenhuma receita cadastrada.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>Últimas despesas</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Descrição</th>
+                        <th>Negócio</th>
+                        <th>Status</th>
+                        <th>Valor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for despesa in ultimas_despesas %}
+                        <tr>
+                            <td>{{ despesa.descricao_despesa }}</td>
+                            <td>{{ despesa.negocio.nome_negocio }}</td>
+                            <td>
+                                <span class="status-badge neutro">
+                                    {{ despesa.status }}
+                                </span>
+                            </td>
+                            <td>R$ {{ despesa.valor_despesa }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="empty-state">
+                                Nenhuma despesa cadastrada.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const chartElement = document.getElementById("financeChart");
+
+    if (!chartElement) return;
+
+    const labels = JSON.parse('{{ chart_labels|escapejs }}');
+    const values = JSON.parse('{{ chart_values|escapejs }}');
+
+    new Chart(chartElement, {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Valor",
+                data: values,
+                backgroundColor: ["#18a18a", "#e35d5d", "#c9a86a"],
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: {
+                    ticks: { color: "#aeb7b1" },
+                    grid: { color: "#303832" }
+                },
+                y: {
+                    ticks: { color: "#aeb7b1" },
+                    grid: { color: "#303832" }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,23 +1,35 @@
 {% extends "base.html" %}
 
-{% block content %}
-<div class="header-flex">
-    <h2>Meus Negócios</h2>
-    <a href="{% url 'cadastrar_negocio' %}" class="btn-add">Novo Negócio</a>
-</div>
+{% block title %}ATLAS - Negócios{% endblock %}
 
-<div class="negocios-grid">
+{% block content %}
+<header class="page-header">
+    <div>
+        <h1>Meus negócios</h1>
+        <p>Empresas e atividades acompanhadas no ATLAS.</p>
+    </div>
+    <div class="actions">
+        <a href="{% url 'cadastrar_negocio' %}" class="btn"><i class="fa-solid fa-plus"></i> Novo negócio</a>
+    </div>
+</header>
+
+<section class="negocios-grid">
     {% for negocio in negocios %}
-    <div class="card-negocio">
-        <h3>{{ negocio.nome }}</h3>
-        <p>Segmento: {{ negocio.segmento }}</p>
-        <p>Meta: R$ {{ negocio.meta_faturamento }}</p>
-        <a href="/negocios/{{ negocio.id }}/">Gerenciar</a>
-    </div>
+        <article class="card-negocio">
+            <h3>{{ negocio.nome_negocio }}</h3>
+            <p><strong>Segmento:</strong> {{ negocio.segmento }}</p>
+            <p><strong>Meta mensal:</strong> R$ {{ negocio.meta_mensal }}</p>
+            <p><strong>Capital inicial:</strong> R$ {{ negocio.capital_inicial }}</p>
+            <a href="{% url 'receitas' %}">Ver movimentações</a>
+        </article>
     {% empty %}
-    <div class="alert">
-        <p>Você ainda não cadastrou nenhum negócio. <a href="#">Comece agora!</a></p>
-    </div>
+        <div class="panel">
+            <h2>Nenhum negócio cadastrado</h2>
+            <p class="muted">Cadastre seu primeiro negócio para começar a registrar receitas, despesas e produtos.</p>
+            <div class="actions">
+                <a href="{% url 'cadastrar_negocio' %}" class="btn">Cadastrar negócio</a>
+            </div>
+        </div>
     {% endfor %}
-</div>
+</section>
 {% endblock %}

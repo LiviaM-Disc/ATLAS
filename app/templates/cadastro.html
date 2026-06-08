@@ -1,9 +1,47 @@
-<form method="POST" action="{% url 'cadastro' %}">
-    {% csrf_token %}
-    <input type="text" name="nome" placeholder="Seu Nome" required>
-    <input type="email" name="email" placeholder="Seu E-mail" required>
-    <input type="password" name="senha" placeholder="Crie uma Senha" required>
-    <button type="submit">Cadastrar</button>
-</form>
+{% load static %}
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATLAS - Cadastro</title>
+    <link rel="stylesheet" href="{% static 'CSS/login.css' %}">
+</head>
+<body>
+    <main class="auth-shell">
+        <section class="brand-panel">
+            <img src="{% static 'images/atlas_logo_negative.png' %}" class="logo" alt="ATLAS">
+            <h1>Comece a organizar seu negócio hoje.</h1>
+            <p>Crie sua conta para acompanhar fluxo de caixa, estoque, precificação e metas financeiras.</p>
+        </section>
 
-<p>Já tem conta? <a href="{% url 'login' %}">Faça login aqui</a></p>
+        <section class="auth-panel">
+            <form class="auth-card" method="post" action="{% url 'cadastro' %}">
+                {% csrf_token %}
+                <h2>Criar conta</h2>
+                <p class="muted">Informe seus dados para acessar o ATLAS.</p>
+
+                {% if messages %}
+                    <div class="auth-messages">
+                        {% for message in messages %}
+                            <p>{{ message }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <label for="nome">Nome</label>
+                <input id="nome" type="text" name="nome" required placeholder="Seu nome">
+
+                <label for="email">E-mail</label>
+                <input id="email" type="email" name="email" required placeholder="seu@email.com">
+
+                <label for="senha">Senha</label>
+                <input id="senha" type="password" name="senha" required placeholder="Crie uma senha">
+
+                <button type="submit">Cadastrar</button>
+                <p class="auth-link">Já tem conta? <a href="{% url 'login' %}">Entrar</a></p>
+            </form>
+        </section>
+    </main>
+</body>
+</html>

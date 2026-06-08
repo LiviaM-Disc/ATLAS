@@ -1,33 +1,46 @@
 {% extends "base.html" %}
-{% block content %}
-<div class="header-flex">
-    <h2>{{ titulo }}</h2>
-    <button class="btn-add"><i class="fas fa-plus"></i> Novo Registro</button>
-</div>
 
-<div class="table-container">
+{% block title %}ATLAS - {{ titulo }}{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <div>
+        <h1>{{ titulo }}</h1>
+        <p>{{ total }} registro{% if total != 1 %}s{% endif %} encontrado{% if total != 1 %}s{% endif %}.</p>
+    </div>
+    <div class="actions">
+        <a class="btn secondary" href="{% url 'index' %}"><i class="fa-solid fa-arrow-left"></i> Home</a>
+    </div>
+</header>
+
+<section class="table-container">
     <table>
         <thead>
             <tr>
-                {% for col in colunas %} <th>{{ col }}</th> {% endfor %}
-                <th>Ações</th>
+                {% for coluna in colunas %}
+                    <th>{{ coluna }}</th>
+                {% endfor %}
             </tr>
         </thead>
         <tbody>
-            {% for item in dados %}
-            <tr>
-                <td>{{ item.nome|default:item.descricao }}</td>
-                <td>{{ item.valor|default:"--" }}</td>
-                <td>{{ item.data_cadastro|date:"d/m/Y" }}</td>
-                <td>
-                    <button class="btn-edit"><i class="fas fa-edit"></i></button>
-                    <button class="btn-delete"><i class="fas fa-trash"></i></button>
-                </td>
-            </tr>
+            {% for linha in linhas %}
+                <tr>
+                    {% for celula in linha %}
+                        <td>
+                            {% if celula.texto %}
+                                <span class="status-badge {{ celula.tipo|default:'neutro' }}">{{ celula.texto }}</span>
+                            {% else %}
+                                {{ celula }}
+                            {% endif %}
+                        </td>
+                    {% endfor %}
+                </tr>
             {% empty %}
-            <tr><td colspan="100%">Nenhum registro de {{ titulo }} encontrado.</td></tr>
+                <tr>
+                    <td class="empty-state" colspan="{{ colunas|length }}">Nenhum registro cadastrado.</td>
+                </tr>
             {% endfor %}
         </tbody>
     </table>
-</div>
+</section>
 {% endblock %}

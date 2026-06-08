@@ -14,7 +14,7 @@ const meuGrafico = new Chart(ctx, {
             tension: 0.4 // Deixa a linha curvada/suave
         }, {
             label: 'Despesas',
-            data: [10000, 15000, 12000, 18000, 16000, 21000],
+            data: [100, 150, 120, 180, 160, 210],
             borderColor: '#ff4d4d', // Vermelho suave
             backgroundColor: 'rgba(255, 77, 77, 0.1)',
             borderWidth: 3,

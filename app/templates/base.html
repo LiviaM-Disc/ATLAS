@@ -1,32 +1,75 @@
 {% load static %}
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>ATLAS - Dashboard</title>
-    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ATLAS{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'CSS/dashboard.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <div class="wrapper">
-        <nav id="sidebar">
-            <div class="sidebar-header"><h2>ATLAS</h2></div>
-            <ul class="list-unstyled components">
-                <li class="{% if request.resolver_match.url_name == 'index' %}active{% endif %}">
-                    <a href="{% url 'index' %}"><i class="fas fa-home"></i> Home</a>
-                </li>
-                <li class="{% if request.resolver_match.url_name == 'listar_negocios' %}active{% endif %}">
-                    <a href="{% url 'listar_negocios' %}"><i class="fas fa-briefcase"></i> Negócios</a>
-                </li>
-                </ul>
-            <div class="user-info">
-                <p>Olá, {{ request.session.usuario_nome }}</p>
-                <a href="{% url 'logout' %}">Sair</a>
+    <div class="app-shell">
+        <aside id="sidebar">
+            <a class="sidebar-brand" href="{% url 'index' %}">
+                <img src="{% static 'images/atlas_logo_negative.png' %}" alt="ATLAS" class="logo">
+            </a>
+
+            <nav class="sidebar-nav" aria-label="Menu principal">
+                <a class="{% if request.resolver_match.url_name == 'index' %}active{% endif %}" href="{% url 'index' %}">
+                    <i class="fa-solid fa-house"></i> Home
+                </a>
+                <a class="{% if request.resolver_match.url_name == 'listar_negocios' %}active{% endif %}" href="{% url 'listar_negocios' %}">
+                    <i class="fa-solid fa-briefcase"></i> Negócios
+                </a>
+                <a class="{% if request.resolver_match.url_name == 'receitas' %}active{% endif %}" href="{% url 'receitas' %}">
+                    <i class="fa-solid fa-arrow-trend-up"></i> Receitas
+                </a>
+                <a class="{% if request.resolver_match.url_name == 'despesas' %}active{% endif %}" href="{% url 'despesas' %}">
+                    <i class="fa-solid fa-arrow-trend-down"></i> Despesas
+                </a>
+                <a class="{% if request.resolver_match.url_name == 'produtos' %}active{% endif %}" href="{% url 'produtos' %}">
+                    <i class="fa-solid fa-boxes-stacked"></i> Produtos
+                </a>
+                <a class="{% if request.resolver_match.url_name == 'servicos' %}active{% endif %}" href="{% url 'servicos' %}">
+                    <i class="fa-solid fa-screwdriver-wrench"></i> Serviços
+                </a>
+                <a class="{% if request.resolver_match.url_name == 'precificacoes' %}active{% endif %}" href="{% url 'precificacoes' %}">
+                    <i class="fa-solid fa-calculator"></i> Precificação
+                </a>
+                <a class="{% if request.resolver_match.url_name == 'metas' %}active{% endif %}" href="{% url 'metas' %}">
+                    <i class="fa-solid fa-bullseye"></i> Metas
+                </a>
+                <a class="{% if request.resolver_match.url_name == 'alertas' %}active{% endif %}" href="{% url 'alertas' %}">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Alertas
+                </a>
+                <a class="{% if request.resolver_match.url_name == 'relatorios' %}active{% endif %}" href="{% url 'relatorios' %}">
+                    <i class="fa-solid fa-chart-pie"></i> Relatórios
+                </a>
+            </nav>
+
+            <div class="user-footer">
+                <div>
+                    <span>Usuário</span>
+                    <strong>{{ request.session.usuario_nome|default:"ATLAS" }}</strong>
+                </div>
+                <a href="{% url 'logout' %}" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Sair</a>
             </div>
-        </nav>
-        <div id="content">
+        </aside>
+
+        <main id="content">
+            {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                        <div class="message {{ message.tags }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
             {% block content %}{% endblock %}
-        </div>
+        </main>
     </div>
+    {% block scripts %}{% endblock %}
 </body>
 </html>

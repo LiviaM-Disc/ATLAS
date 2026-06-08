@@ -1,18 +1,80 @@
 {% extends "base.html" %}
-{% block content %}
-<div class="header-flex">
-    <h2>Relatórios e Fechamento</h2>
-    <button class="btn-add"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
-</div>
 
-<div class="grid-relatorios" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-    <div class="card">
-        <h3>Fechamento Mensal</h3>
-        <p>Status: <span class="status-badge sucess">Concluído</span></p>
-        <hr>
-        <p>Receitas: R$ 5.000</p>
-        <p>Despesas: R$ 3.200</p>
-        <strong>Lucro: R$ 1.800</strong>
+{% block title %}ATLAS - Relatórios{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <div>
+        <h1>Relatórios</h1>
+        <p>Fechamentos, indicadores e relatórios gerados para os negócios cadastrados.</p>
     </div>
-</div>
+    <div class="actions">
+        <a class="btn secondary" href="{% url 'fechamentos' %}">Fechamentos</a>
+        <a class="btn secondary" href="{% url 'indicadores' %}">Indicadores</a>
+    </div>
+</header>
+
+<section class="reports-grid">
+    <article class="panel">
+        <h2>Fechamentos mensais</h2>
+        <div class="table-container">
+            <table>
+                <thead><tr><th>Período</th><th>Negócio</th><th>Lucro</th><th>Saldo</th></tr></thead>
+                <tbody>
+                    {% for fechamento in fechamentos %}
+                        <tr>
+                            <td>{{ fechamento.periodo|date:"m/Y" }}</td>
+                            <td>{{ fechamento.negocio.nome_negocio }}</td>
+                            <td>R$ {{ fechamento.lucro_liquido }}</td>
+                            <td>R$ {{ fechamento.saldo_final }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="4" class="empty-state">Nenhum fechamento cadastrado.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </article>
+
+    <article class="panel">
+        <h2>Indicadores financeiros</h2>
+        <div class="table-container">
+            <table>
+                <thead><tr><th>Negócio</th><th>Margem</th><th>Ponto de equilíbrio</th></tr></thead>
+                <tbody>
+                    {% for indicador in indicadores %}
+                        <tr>
+                            <td>{{ indicador.negocio.nome_negocio }}</td>
+                            <td>{{ indicador.margem_lucro }}%</td>
+                            <td>R$ {{ indicador.ponto_equilibrio }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="3" class="empty-state">Nenhum indicador cadastrado.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </article>
+</section>
+
+<section class="panel" style="margin-top: 16px;">
+    <h2>Relatórios gerados</h2>
+    <div class="table-container">
+        <table>
+            <thead><tr><th>Tipo</th><th>Período</th><th>Geração</th><th>Negócio</th></tr></thead>
+            <tbody>
+                {% for relatorio in relatorios %}
+                    <tr>
+                        <td>{{ relatorio.tipo_relatorio }}</td>
+                        <td>{{ relatorio.periodo|date:"d/m/Y" }}</td>
+                        <td>{{ relatorio.data_geracao|date:"d/m/Y" }}</td>
+                        <td>{{ relatorio.negocio.nome_negocio }}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="4" class="empty-state">Nenhum relatório cadastrado.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
 {% endblock %}
