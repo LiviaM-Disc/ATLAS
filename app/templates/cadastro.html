@@ -1,0 +1,9 @@
+<form method="POST" action="{% url 'cadastro' %}">
+    {% csrf_token %}
+    <input type="text" name="nome" placeholder="Seu Nome" required>
+    <input type="email" name="email" placeholder="Seu E-mail" required>
+    <input type="password" name="senha" placeholder="Crie uma Senha" required>
+    <button type="submit">Cadastrar</button>
+</form>
+
+<p>Já tem conta? <a href="{% url 'login' %}">Faça login aqui</a></p>

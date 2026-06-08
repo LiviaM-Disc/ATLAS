@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="header-flex">
+    <h2>Relatórios e Fechamento</h2>
+    <button class="btn-add"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+</div>
+
+<div class="grid-relatorios" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <div class="card">
+        <h3>Fechamento Mensal</h3>
+        <p>Status: <span class="status-badge sucess">Concluído</span></p>
+        <hr>
+        <p>Receitas: R$ 5.000</p>
+        <p>Despesas: R$ 3.200</p>
+        <strong>Lucro: R$ 1.800</strong>
+    </div>
+</div>
+{% endblock %}

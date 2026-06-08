@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="header-flex">
+    <h2>{{ titulo }}</h2>
+    <button class="btn-add"><i class="fas fa-plus"></i> Novo Registro</button>
+</div>
+
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                {% for col in colunas %} <th>{{ col }}</th> {% endfor %}
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in dados %}
+            <tr>
+                <td>{{ item.nome|default:item.descricao }}</td>
+                <td>{{ item.valor|default:"--" }}</td>
+                <td>{{ item.data_cadastro|date:"d/m/Y" }}</td>
+                <td>
+                    <button class="btn-edit"><i class="fas fa-edit"></i></button>
+                    <button class="btn-delete"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="100%">Nenhum registro de {{ titulo }} encontrado.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

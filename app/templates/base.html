@@ -1,0 +1,32 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>ATLAS - Dashboard</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="wrapper">
+        <nav id="sidebar">
+            <div class="sidebar-header"><h2>ATLAS</h2></div>
+            <ul class="list-unstyled components">
+                <li class="{% if request.resolver_match.url_name == 'index' %}active{% endif %}">
+                    <a href="{% url 'index' %}"><i class="fas fa-home"></i> Home</a>
+                </li>
+                <li class="{% if request.resolver_match.url_name == 'listar_negocios' %}active{% endif %}">
+                    <a href="{% url 'listar_negocios' %}"><i class="fas fa-briefcase"></i> Negócios</a>
+                </li>
+                </ul>
+            <div class="user-info">
+                <p>Olá, {{ request.session.usuario_nome }}</p>
+                <a href="{% url 'logout' %}">Sair</a>
+            </div>
+        </nav>
+        <div id="content">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+</body>
+</html>

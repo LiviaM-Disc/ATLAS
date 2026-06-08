@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Gerenciar Precificação</h2>
+<div class="card" style="max-width: 500px; margin-top: 20px;">
+    <form id="calc-preco">
+        <label>Custo do Produto (R$)</label>
+        <input type="number" id="custo" class="dark-input">
+        
+        <label>Margem Desejada (%)</label>
+        <input type="number" id="margem" class="dark-input">
+        
+        <div class="resultado" style="margin-top: 20px; padding: 15px; background: #333; border-radius: 8px;">
+            <span>Preço Sugerido:</span>
+            <h2 id="preco-final">R$ 0,00</h2>
+        </div>
+    </form>
+</div>
+{% endblock %}
+

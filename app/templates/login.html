@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atlas - Login</title>
+    <link rel="stylesheet" href="/static/CSS/login.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Playfair+Display:wght@500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="left-panel">
+            <img src="/static/images/atlas_logo_negative.png" class="logo" alt="Atlas Logo">
+            <h1>Transformamos dados em lucro e decisões estratégicas.</h1>
+            <p>Plataforma inteligente para gestão financeira, análise de desempenho e crescimento empresarial.</p>
+        </div>
+
+        <div class="right-panel">
+            <div class="login-card">
+                <h2>Bem-vindo</h2>
+                
+               <form method="POST" action="{% url 'login' %}">
+    {% csrf_token %}
+    
+    <div class="input-group">
+        <label>Email</label>
+        <input type="email" name="email" required placeholder="seu@email.com">
+    </div>
+
+    <div class="input-group">
+        <label>Senha</label>
+        <input type="password" name="senha" required placeholder="******">
+    </div>
+
+    <button type="submit">Entrar</button>
+    <div style="margin-top: 20px; text-align: center;">
+        <p>Não tem uma conta?</p>
+        <a href="{% url 'cadastro' %}" class="btn-secondary">Cadastre-se agora</a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <p style="color: #ff4d4d; text-align: center;">{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+</form>
+            </div>
+        </div>
+    </div>
+    
+    </body>
+</html>

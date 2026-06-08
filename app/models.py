@@ -1,13 +1,16 @@
 from django.db import models
 
-class Usuario (models.Model):
-    nome = models.CharField(max_length=150,verbose_name="Nome do Usuario")
-    email=models.EmailField(max_length=30,verbose_name="Email")
-    senha=models.CharField(max_length=120,verbose_name="Senha")
-    data_cadastro=models.DateField(verbose_name=" Data de Cadastro")
-    tipo_usuario=models.CharField(max_length=20,verbose_name=" Tipo de Usuario")
+from django.db import models
+
+class Usuario(models.Model):
+    nome = models.CharField(max_length=100)
+    email = models.EmailField(unique=True) # Impede e-mails repetidos
+    senha = models.CharField(max_length=255)
+    tipo_usuario = models.CharField(max_length=20, default='MEI')
+    data_cadastro = models.DateField(auto_now_add=True)
+
     def __str__(self):
-        return f"{self.nome},{self.email},{self.data_cadastro},{self.tipo_usuario}"
+        return self.nome
     class Meta:
         verbose_name= "Usuário"
         verbose_name_plural= "Usuários"

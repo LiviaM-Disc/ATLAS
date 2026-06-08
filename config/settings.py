@@ -108,3 +108,15 @@ STATICFILES_DIRS = [APP_STATIC_DIR] if APP_STATIC_DIR.exists() else []
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        # Isso remove a dependência obrigatória de Cookies/Sessão para a API
+        'rest_framework.authentication.TokenAuthentication', 
+        'rest_framework.authentication.BasicAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ],
+}

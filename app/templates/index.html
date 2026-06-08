@@ -1,115 +1,67 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATLAS</title>
-
-    <style>
-        *{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, Helvetica, sans-serif;
-        }
-
-        body{
-            background-color: #f4f6f9;
-        }
-
-        header{
-            background-color: #1e3a5f;
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-
-        nav{
-            background-color: #294d73;
-            padding: 15px;
-            text-align: center;
-        }
-
-        nav a{
-            color: white;
-            text-decoration: none;
-            margin: 0 15px;
-            font-weight: bold;
-        }
-
-        nav a:hover{
-            color: #ffd166;
-        }
-
-        main{
-            padding: 40px;
-            text-align: center;
-        }
-
-        .card{
-            background-color: white;
-            width: 80%;
-            margin: auto;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
-        }
-
-        h1{
-            margin-bottom: 15px;
-        }
-
-        p{
-            color: #555;
-            line-height: 1.6;
-        }
-
-        footer{
-            background-color: #1e3a5f;
-            color: white;
-            text-align: center;
-            padding: 15px;
-            margin-top: 40px;
-        }
-    </style>
+    <title>ATLAS - Dashboard</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
+    <div class="wrapper">
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <img src="{% static 'images/atlas_logo_negative.png' %}" alt="Logo Atlas" class="logo">
+            </div>
 
-    <header>
-        <h1>ATLAS</h1>
-        <p>Sistema de Gestão Financeira</p>
-    </header>
+            <ul class="list-unstyled components">
+                <li class="active"><a href="#"><i class="fas fa-home"></i> Home</a></li>
+                <li><a href="#"><i class="fas fa-chart-line"></i> Negócios</a></li>
+                <li><a href="#"><i class="fas fa-wallet"></i> Financeiro</a></li>
+                <li><a href="#"><i class="fas fa-box"></i> Produtos</a></li>
+            </ul>
 
-    <nav>
-        <a href="#">Início</a>
-        <a href="#">Usuários</a>
-        <a href="#">Negócios</a>
-        <a href="#">Receitas</a>
-        <a href="#">Despesas</a>
-        <a href="#">Produtos</a>
-    </nav>
+            <div class="user-footer">
+                <p>Olá, <strong>{{ nome }}</strong></p>
+                <a href="{% url 'logout' %}" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</a>
+            </div>
+        </nav>
 
-    <main>
-        <div class="card">
-            <h1>Bem-vindo ao ATLAS</h1>
+        <div id="content">
+            <header class="main-header">
+                <h2>Visão Geral</h2>
+            </header>
 
-            <p>
-                O sistema ATLAS foi desenvolvido para auxiliar no controle
-                financeiro de negócios, permitindo o gerenciamento de receitas,
-                despesas, produtos, serviços e relatórios financeiros.
-            </p>
-
-            <br>
-
-            <p>
-                Utilize o menu acima para navegar pelas funcionalidades do sistema.
-            </p>
+            <div class="dashboard-cards">
+    <div class="card receita">
+        <div class="card-icon"><i class="fas fa-arrow-up"></i></div>
+        <div>
+            <span class="label">Receitas</span>
+            <h3 class="value">R$ 0,00</h3>
         </div>
-    </main>
+    </div>
 
-    <footer>
-        <p>Projeto ATLAS </p>
-    </footer>
+    <div class="card despesa">
+        <div class="card-icon"><i class="fas fa-arrow-down"></i></div>
+        <div>
+            <span class="label">Despesas</span>
+            <h3 class="value">R$ 0,00</h3>
+        </div>
+    </div>
+</div>
+        </div>
+        <div class="dashboard-content">
+    <div class="charts-container">
+        <div class="chart-card">
+            <h3>Fluxo de Caixa (Receitas vs Despesas)</h3>
+            <canvas id="meuGraficoFinanceiro"></canvas>
+        </div>
+    </div>
+</div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    </div>
 </body>
 </html>

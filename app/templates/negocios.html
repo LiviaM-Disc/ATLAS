@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header-flex">
+    <h2>Meus Negócios</h2>
+    <a href="{% url 'cadastrar_negocio' %}" class="btn-add">Novo Negócio</a>
+</div>
+
+<div class="negocios-grid">
+    {% for negocio in negocios %}
+    <div class="card-negocio">
+        <h3>{{ negocio.nome }}</h3>
+        <p>Segmento: {{ negocio.segmento }}</p>
+        <p>Meta: R$ {{ negocio.meta_faturamento }}</p>
+        <a href="/negocios/{{ negocio.id }}/">Gerenciar</a>
+    </div>
+    {% empty %}
+    <div class="alert">
+        <p>Você ainda não cadastrou nenhum negócio. <a href="#">Comece agora!</a></p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
