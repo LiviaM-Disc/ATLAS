@@ -23,7 +23,7 @@
                 <a class="{% if request.resolver_match.url_name == 'listar_negocios' %}active{% endif %}" href="{% url 'listar_negocios' %}">
                     <i class="fa-solid fa-briefcase"></i> Negócios
                 </a>
-                <a class="{% if request.resolver_match.url_name == 'receitas' %}active{% endif %}" href="{% url 'receitas' %}">
+                <a class="{% if request.resolver_match.url_name == 'lista_receitas' %}active{% endif %}" href="{% url 'lista_receitas' %}">
                     <i class="fa-solid fa-arrow-trend-up"></i> Receitas
                 </a>
                 <a class="{% if request.resolver_match.url_name == 'despesas' %}active{% endif %}" href="{% url 'despesas' %}">
@@ -70,6 +70,7 @@
             {% block content %}{% endblock %}
         </main>
     </div>
+    
     {% block scripts %}{% endblock %}
 </body>
 </html>

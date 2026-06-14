@@ -1,12 +1,9 @@
 from django.contrib import admin
-from django.urls import path
-# Importe as funções da sua pasta 'app'
-from app.views import index_view, login_view, logout_view, cadastro_view 
+from django.urls import path, include # Importe o 'include' aqui
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', index_view, name='index'),
-    path('login/', login_view, name='login'),
-    path('logout/', logout_view, name='logout'),
-    path('cadastro/', cadastro_view, name='cadastro'), # Agora o Python conhece a cadastro_view
+    
+    # Isso faz o Django ler todas as rotas que você criou dentro de app/urls.py
+    path('', include('app.urls')), 
 ]

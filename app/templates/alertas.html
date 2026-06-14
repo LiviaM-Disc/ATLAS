@@ -1,1 +1,23 @@
-{% extends "listagem_geral.html" %}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <div class="header-container">
+        <h1>Centro de Notificações</h1>
+        <p class="text-muted">Fique de olho nos avisos importantes do seu negócio.</p>
+    </div>
+
+    <div class="card shadow">
+        <h3>Alertas Recentes</h3>
+        <ul style="list-style: none; padding: 0;">
+            <li style="background: #221515; border: 1px solid #4a1515; color: #f8d7da; padding: 15px; border-radius: 6px; margin-bottom: 10px;">
+                ⚠️ <strong>Aviso de Estoque:</strong> O produto "Vestido Midi" atingiu o limite mínimo configurado (2 unidades restantes).
+            </li>
+            <li style="background: #151f18; border: 1px solid #1a3a22; color: #d4edda; padding: 15px; border-radius: 6px; margin-bottom: 10px;">
+                ✅ <strong>Meta Atingida:</strong> Parabéns! Você atingiu 100% da meta de faturamento semanal.
+            </li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

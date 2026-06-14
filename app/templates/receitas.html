@@ -1,1 +1,75 @@
-{% extends "listagem_geral.html" %}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <div class="header-container">
+        <div class="page-title">
+            <h1>Controle de Receitas</h1>
+            <p>Gerencie os valores que entram no caixa da sua empresa.</p>
+        </div>
+    </div>
+
+    {% if messages %}
+        <div class="messages-container">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="main-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+        <div class="card shadow">
+            <h3>Histórico de Entradas</h3>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Descrição</th>
+                            <th>Negócio</th>
+                            <th>Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for receita in receitas %}
+                            <tr>
+                                <td>{{ receita.data|date:"d/m/Y" }}</td>
+                                <td>{{ receita.descricao }}</td>
+                                <td>{{ receita.negocio.nome_negocio }}</td>
+                                <td style="color: #28a745; font-weight: bold;">R$ {{ receita.valor }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-muted text-center" style="padding: 40px 0;">
+                                    Nenhuma receita registrada ainda.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card shadow">
+            <h3>Lançar Nova Receita</h3>
+            <form method="POST" action="{% url 'lista_receitas' %}">
+                {% csrf_token %}
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="descricao">Descrição / Origem</label>
+                    <input id="descricao" name="descricao" type="text" required class="form-control" placeholder="Ex: Venda de Vestido" style="width:100%; padding:10px; background:#161616; border:1px solid #333; color:white; border-radius:4px;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="valor">Valor (R$)</label>
+                    <input id="valor" name="valor" type="number" step="0.01" required class="form-control" placeholder="0.00" style="width:100%; padding:10px; background:#161616; border:1px solid #333; color:white; border-radius:4px;">
+                </div>
+
+                <button type="submit" class="btn-primary" style="width: 100%; padding: 12px; background: #c5a880; color: black; font-weight: bold; border: none; border-radius: 4px; cursor: pointer;">
+                    Confirmar Lançamento
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

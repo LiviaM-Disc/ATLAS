@@ -1,1 +1,24 @@
-{% extends "listagem_geral.html" %}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <div class="header-container">
+        <h1>Indicadores Financeiros de Desempenho</h1>
+        <p class="text-muted">Métricas avançadas para tomada de decisões estratégicas.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+        <div class="card">
+            <h4>Ticket Médio por Venda</h4>
+            <h2 style="color: #c5a880;">R$ 185,00</h2>
+            <p style="color: #555; font-size: 12px;">Valor médio gasto por cliente em cada pedido.</p>
+        </div>
+        <div class="card">
+            <h4>Ponto de Equilíbrio (Break-even)</h4>
+            <h2 style="color: #dc3545;">R$ 4.800,00 /mês</h2>
+            <p style="color: #555; font-size: 12px;">Mínimo necessário faturar para cobrir custos operacionais.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

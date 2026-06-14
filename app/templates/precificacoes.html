@@ -15,7 +15,7 @@
     <div class="form-panel">
         <h2>Calculadora rápida</h2>
 
-        <form id="calc-preco">
+        <div id="calc-preco">
             <div class="form-group">
                 <label for="custo">Custo total (R$)</label>
                 <input type="number" id="custo" min="0" step="0.01" placeholder="0,00" class="form-control">
@@ -35,16 +35,16 @@
                 <span class="label">Preço sugerido</span>
                 <strong class="value" id="preco-final">R$ 0,00</strong>
             </div>
-        </form>
+        </div>
     </div>
 
     <div class="panel">
         <h2>Como o cálculo é feito</h2>
         <p class="muted">
-            O preço sugerido considera: <br>
-            <strong>Custo + Lucro desejado + Impostos aplicados.</strong>
+            O preço sugerido é calculado com base no <strong>Markup Divisor</strong>. <br>
+            Isso garante que a margem de lucro e os impostos incidam corretamente sobre o <strong>Preço de Venda Final</strong>, protegendo sua rentabilidade.
         </p>
-        <small>Nota: O cálculo atual utiliza a lógica de Markup sobre o custo total.</small>
+        <small>Nota: A fórmula utilizada impede que os impostos consumam a sua margem de lucro real.</small>
     </div>
 </section>
 

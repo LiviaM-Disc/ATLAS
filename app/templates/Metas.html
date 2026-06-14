@@ -1,1 +1,33 @@
-{% extends "listagem_geral.html" %}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <div class="header-container">
+        <div class="page-title">
+            <h1>Metas de Faturamento</h1>
+            <p>Acompanhe o progresso financeiro mensal de <strong>{{ negocio.nome_negocio }}</strong>.</p>
+        </div>
+    </div>
+
+    <div class="card shadow" style="margin-bottom: 25px; background: #111; padding: 30px; border-radius: 8px;">
+        <h3 style="margin-top:0;">Meta do Mês Vigente</h3>
+        
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; color: #aaa;">
+            <span>Progresso Atual: <strong>R$ {{ total_receitas }}</strong></span>
+            <span>Alvo Comercial: <strong>R$ {{ negocio.meta_mensal }}</strong></span>
+        </div>
+
+        <div style="width: 100%; background: #222; height: 20px; border-radius: 10px; overflow: hidden; border: 1px solid #333;">
+            <div style="width: 45%; background: linear-gradient(90deg, #c5a880, #e2ccb0); height: 100%; border-radius: 10px;"></div>
+        </div>
+        
+        <p style="font-size: 13px; color: #666; margin-top: 10px;">Você atingiu aproximadamente 45% da sua meta estimada de vendas para este ciclo.</p>
+    </div>
+
+    <div class="card shadow">
+        <h3>Ajustar Planejamento</h3>
+        <p class="text-muted">Deseja redefinir os alvos da sua empresa? Altere o valor no painel de configurações do Negócio.</p>
+    </div>
+</div>
+{% endblock %}

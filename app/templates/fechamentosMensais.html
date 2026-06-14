@@ -1,1 +1,32 @@
-{% extends "listagem_geral.html" %}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <div class="header-container">
+        <h1>Fechamentos Mensais</h1>
+        <p class="text-muted">Consulte o histórico consolidado de lucros e prejuízos por mês.</p>
+    </div>
+
+    <div class="card shadow">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Mês/Ano</th>
+                    <th>Faturamento Bruto</th>
+                    <th>Custos Totais</th>
+                    <th>Resultado Líquido</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Maio / 2026</td>
+                    <td style="color: #28a745;">R$ 14.500,00</td>
+                    <td style="color: #dc3545;">R$ 5.200,00</td>
+                    <td style="font-weight: bold; color: #007bff;">R$ 9.300,00</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

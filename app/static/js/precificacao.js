@@ -1,5 +1,3 @@
-
-
 document.addEventListener("DOMContentLoaded", function () {
     const formatter = new Intl.NumberFormat("pt-BR", {
         style: "currency",
@@ -12,27 +10,32 @@ document.addEventListener("DOMContentLoaded", function () {
     const output = document.getElementById("preco-final");
 
     function calcularPreco() {
-        // Converte valores para float, tratando campos vazios como 0
-        const custo = parseFloat(custoEl.value) || 0;
-        const margem = parseFloat(margemEl.value) || 0;
-        const impostos = parseFloat(impostosEl.value) || 0;
+        // Força a conversão substituindo vírgula por ponto, caso o usuário digite com vírgula
+        const custo = parseFloat(custoEl.value.replace(',', '.')) || 0;
+        const margem = parseFloat(margemEl.value.replace(',', '.')) || 0;
+        const impostos = parseFloat(impostosEl.value.replace(',', '.')) || 0;
 
-        if (custo > 0) {
-            // Lógica de Markup (sobre o custo)
-            const precoFinal = custo * (1 + (margem / 100) + (impostos / 100));
+        const somaPorcentagens = margem + impostos;
+
+        // Validação da regra de negócio do Markup Divisor
+        if (custo > 0 && somaPorcentagens < 100) {
+            const precoFinal = custo / (1 - (somaPorcentagens / 100));
             output.textContent = formatter.format(precoFinal);
+        } else if (somaPorcentagens >= 100) {
+            output.textContent = "Inválido (>= 100%)";
         } else {
             output.textContent = "R$ 0,00";
         }
     }
 
-    // Adiciona o evento de escuta nos três campos
+    // Escuta tanto "input" quanto "change" para garantir que funcione em qualquer navegador
     [custoEl, margemEl, impostosEl].forEach(el => {
         if (el) {
             el.addEventListener("input", calcularPreco);
+            el.addEventListener("change", calcularPreco);
         }
     });
 
-    // Roda uma vez ao carregar para garantir que o total esteja zerado ou atualizado
+    // Executa imediatamente para atualizar caso o navegador tenha guardado valores no cache
     calcularPreco();
 });

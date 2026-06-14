@@ -20,7 +20,7 @@
             <p><strong>Segmento:</strong> {{ negocio.segmento }}</p>
             <p><strong>Meta mensal:</strong> R$ {{ negocio.meta_mensal }}</p>
             <p><strong>Capital inicial:</strong> R$ {{ negocio.capital_inicial }}</p>
-            <a href="{% url 'receitas' %}">Ver movimentações</a>
+            <a href="{% url 'lista_receitas' %}">Ver movimentações</a>
         </article>
     {% empty %}
         <div class="panel">
