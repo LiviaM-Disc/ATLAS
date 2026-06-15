@@ -1,13 +1,47 @@
-{% extends 'base.html' %}
-{% load static %}
+{% extends "base.html" %}
+
+{% block title %}ATLAS - Meu Perfil{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="card shadow" style="max-width: 500px; margin: 0 auto;">
-        <h3>Meu Perfil de Usuário</h3>
-        <hr style="border-color: #222;">
-        <p><strong>Nome Cadastrado:</strong> {{ request.session.usuario_nome }}</p>
-        <p><strong>Status da Conta:</strong> Administrador <span style="color: #28a745;">● Ativo</span></p>
+<header class="page-header">
+    <div>
+        <h1>Meu Perfil</h1>
+        <p>Gerencie suas informações de usuário.</p>
     </div>
-</div>
+</header>
+
+<section class="dashboard-layout">
+    <div class="form-panel" style="max-width: 600px;">
+        <h2>Editar Perfil</h2>
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="nome">Nome</label>
+                <input type="text" id="nome" name="nome" value="{{ usuario.nome }}" required class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="email">E-mail</label>
+                <input type="email" id="email" name="email" value="{{ usuario.email }}" required class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="tipo_usuario">Tipo de Usuário</label>
+                <select id="tipo_usuario" name="tipo_usuario" class="form-control">
+                    <option value="MEI" {% if usuario.tipo_usuario == 'MEI' %}selected{% endif %}>MEI</option>
+                    <option value="PJ" {% if usuario.tipo_usuario == 'PJ' %}selected{% endif %}>PJ</option>
+                    <option value="Pessoa Física" {% if usuario.tipo_usuario == 'Pessoa Física' %}selected{% endif %}>Pessoa Física</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Data de Cadastro</label>
+                <input type="text" value="{{ usuario.data_cadastro|date:'d/m/Y' }}" disabled class="form-control">
+            </div>
+
+            <button type="submit" class="btn">Salvar Alterações</button>
+        </form>
+    </div>
+</section>
 {% endblock %}

@@ -209,4 +209,3 @@ class Dashboard (models.Model):
     class Meta:
         verbose_name="Dashboard"
         verbose_name_plural="Dashboards"
-

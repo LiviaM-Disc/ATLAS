@@ -1,23 +1,86 @@
-{% extends 'base.html' %}
-{% load static %}
+{% extends "base.html" %}
+
+{% block title %}ATLAS - Alertas{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="header-container">
-        <h1>Centro de Notificações</h1>
-        <p class="text-muted">Fique de olho nos avisos importantes do seu negócio.</p>
+<header class="page-header">
+    <div>
+        <h1>Alertas</h1>
+        <p>Gerencie alertas e avisos dos seus negócios.</p>
+    </div>
+</header>
+
+<section class="dashboard-layout">
+    <div class="panel">
+        <h2>Alertas cadastrados</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mensagem</th>
+                        <th>Negócio</th>
+                        <th>Data</th>
+                        <th>Prioridade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for alerta in alertas %}
+                        <tr>
+                            <td>{{ alerta.mensagem }}</td>
+                            <td>{{ alerta.negocio.nome_negocio }}</td>
+                            <td>{{ alerta.data_alerta|date:"d/m/Y" }}</td>
+                            <td>
+                                <span class="status-badge {% if alerta.prioridade == 'Alta' %}alta{% elif alerta.prioridade == 'Média' %}media{% else %}baixa{% endif %}">
+                                    {{ alerta.prioridade }}
+                                </span>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="empty-state">Nenhum alerta cadastrado.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <div class="card shadow">
-        <h3>Alertas Recentes</h3>
-        <ul style="list-style: none; padding: 0;">
-            <li style="background: #221515; border: 1px solid #4a1515; color: #f8d7da; padding: 15px; border-radius: 6px; margin-bottom: 10px;">
-                ⚠️ <strong>Aviso de Estoque:</strong> O produto "Vestido Midi" atingiu o limite mínimo configurado (2 unidades restantes).
-            </li>
-            <li style="background: #151f18; border: 1px solid #1a3a22; color: #d4edda; padding: 15px; border-radius: 6px; margin-bottom: 10px;">
-                ✅ <strong>Meta Atingida:</strong> Parabéns! Você atingiu 100% da meta de faturamento semanal.
-            </li>
-        </ul>
+    <div class="form-panel">
+        <h2>Novo alerta</h2>
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="mensagem">Mensagem</label>
+                <textarea id="mensagem" name="mensagem" required class="form-control" rows="3"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="data_alerta">Data</label>
+                <input type="date" id="data_alerta" name="data_alerta" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="prioridade">Prioridade</label>
+                <select id="prioridade" name="prioridade" class="form-control">
+                    <option value="Baixa">Baixa</option>
+                    <option value="Média">Média</option>
+                    <option value="Alta">Alta</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="negocio">Negócio</label>
+                <select id="negocio" name="negocio" required class="form-control">
+                    <option value="">Selecione um negócio</option>
+                    {% for neg in negocios %}
+                        <option value="{{ neg.id }}">{{ neg.nome_negocio }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="btn">Adicionar Alerta</button>
+        </form>
     </div>
-</div>
+</section>
 {% endblock %}

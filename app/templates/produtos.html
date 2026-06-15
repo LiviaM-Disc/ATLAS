@@ -5,95 +5,89 @@
 {% block content %}
 <header class="page-header">
     <div>
-        <h1>Gerenciamento de Produtos</h1>
-        <p>Monitore seu estoque, custos de produção e preços de venda de <strong>{{ negocio.nome_negocio }}</strong>.</p>
+        <h1>Produtos</h1>
+        <p>Gerencie os produtos de {{ negocio.nome_negocio }}.</p>
     </div>
 </header>
 
-<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start;">
-    
-    <section class="form-panel" style="padding: 20px;">
-        <h2>Produtos Cadastrados</h2>
-        <div style="overflow-x: auto; margin-top: 15px;">
-            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+<section class="dashboard-layout">
+    <div class="panel">
+        <h2>Produtos cadastrados</h2>
+        <div class="table-container">
+            <table>
                 <thead>
-                    <tr style="border-bottom: 1px solid #eee; height: 50px;">
-                        <td><strong>{{ produto.nome }}</strong></td>
-                        <td>R$ {{ produto.custo }}</td>
-                        <td>R$ {{ produto.preco_venda }}</td> 
-                        <td>{{ produto.estoque }} un</td>
-                        <td>
-                            <a href="#" style="color: #ffc107; text-decoration: none; margin-right: 10px;">Editar</a>
-                        </td>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Categoria</th>
+                        <th>Custo</th>
+                        <th>Preço de Venda</th>
+                        <th>Estoque</th>
+                        <th>Margem</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for produto in produtos %}
-                    <tr style="border-bottom: 1px solid #eee; height: 50px;">
-                        <td><strong>{{ produto.nome }}</strong></td>
-                        <td>R$ {{ produto.custo }}</td>
-                        <td>R$ {{ produto.preco }}</td>
-                        <td>{{ produto.estoque }} un</td>
-                        <td>
-                            <a href="#" style="color: #ffc107; text-decoration: none; margin-right: 10px;">Editar</a>
-                        </td>
-                    </tr>
+                        <tr>
+                            <td>{{ produto.nome }}</td>
+                            <td>{{ produto.categoria.nome_categoria }}</td>
+                            <td>R$ {{ produto.custo }}</td>
+                            <td>R$ {{ produto.preco_venda }}</td>
+                            <td>{{ produto.estoque }}</td>
+                            <td>
+                                {% if produto.custo > 0 %}
+                                    {% widthratio produto.preco_venda produto.custo 100 %}%
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                        </tr>
                     {% empty %}
-                    <tr>
-                        <td colspan="5" style="text-align: center; padding: 30px; color: #888;">
-                            Nenhum produto cadastrado ainda. Use o formulário ao lado!
-                        </td>
-                    </tr>
+                        <tr>
+                            <td colspan="6" class="empty-state">Nenhum produto cadastrado.</td>
+                        </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-    </section>
-
-    <section class="form-panel">
-        <h2>Adicionar Produto</h2>
-       <form method="POST" action="{% url 'produtos' %}">
-    {% csrf_token %}
-
-    <div class="form-grid">
-        <div>
-            <label for="nome_produto">Nome do Produto</label>
-            <input id="nome_produto" name="nome_produto" type="text" required placeholder="Ex: Vestido Longo">
-        </div>
-
-        <div>
-            <label for="custo_producao">Custo de Produção (R$)</label>
-            <input id="custo_producao" name="custo_producao" type="number" step="0.01" placeholder="0.00">
-        </div>
-
-        <div>
-            <label for="preco_venda">Preço de Venda (R$)</label>
-            <input id="preco_venda" name="preco_venda" type="number" step="0.01" placeholder="0.00">
-        </div>
-
-        <div>
-            <label for="estoque">Estoque Inicial</label>
-            <input id="estoque" name="estoque" type="number" min="0" placeholder="0">
-        </div>
-
-        <div>
-            <label for="categoria">Categoria do Produto</label>
-            <select id="categoria" name="categoria" required style="width: 100%; padding: 10px; background: #1a1a1a; color: white; border: 1px solid #333; border-radius: 4px; margin-top: 5px;">
-                <option value="" disabled selected>Selecione uma categoria...</option>
-                {% for cat in categorias %}
-                    <option value="{{ cat.id }}">{{ cat.nome }}</option>
-                {% endfor %}
-            </select>
-        </div>
     </div>
 
-    <div class="actions" style="margin-top: 18px;">
-        <button type="submit" style="width: 100%; padding: 10px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            Salvar Produto
-        </button>
-    </div>
-</form>
-    </section>
+    <div class="form-panel">
+        <h2>Novo produto</h2>
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="nome_produto">Nome do Produto</label>
+                <input type="text" id="nome_produto" name="nome_produto" required class="form-control">
+            </div>
 
-</div>
+            <div class="form-group">
+                <label for="custo_producao">Custo (R$)</label>
+                <input type="number" id="custo_producao" name="custo_producao" step="0.01" min="0" required class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="preco_venda">Preço de Venda (R$)</label>
+                <input type="number" id="preco_venda" name="preco_venda" step="0.01" min="0" required class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="estoque">Estoque</label>
+                <input type="number" id="estoque" name="estoque" min="0" required class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="categoria">Categoria</label>
+                <select id="categoria" name="categoria" required class="form-control">
+                    <option value="">Selecione uma categoria</option>
+                    {% for cat in categorias %}
+                        <option value="{{ cat.id }}">{{ cat.nome_categoria }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="btn">Adicionar Produto</button>
+        </form>
+    </div>
+</section>
 {% endblock %}

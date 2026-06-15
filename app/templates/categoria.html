@@ -1,63 +1,65 @@
-{% extends 'base.html' %}
-{% load static %}
+{% extends "base.html" %}
+
+{% block title %}ATLAS - Categorias{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="header-container">
-        <div class="page-title">
-            <h1>Gerenciamento de Categorias</h1>
-            <p>Defina as categorias para organizar a precificação e relatórios dos seus produtos.</p>
-        </div>
+<header class="page-header">
+    <div>
+        <h1>Categorias</h1>
+        <p>Gerencie as categorias de receitas e despesas.</p>
     </div>
+</header>
 
-    {% if messages %}
-        <div class="messages-container">
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-            {% endfor %}
-        </div>
-    {% endif %}
-
-    <div class="main-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-        <div class="card shadow">
-            <h3>Nova Categoria</h3>
-            <form method="POST" action="{% url 'categorias' %}">
-                {% csrf_token %}
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <label for="nome_categoria">Nome da Categoria</label>
-                    <input id="nome_categoria" name="nome_categoria" type="text" required placeholder="Ex: Roupas, Joias, Sobremesas" class="form-control" style="width:100%; padding:10px; background:#161616; border:1px solid #333; color:white; border-radius:4px;">
-                </div>
-                <button type="submit" class="btn-primary" style="width: 100%; padding: 12px; background: #c5a880; color: black; font-weight: bold; border: none; border-radius: 4px; cursor: pointer;">
-                    Cadastrar Categoria
-                </button>
-            </form>
-        </div>
-
-        <div class="card shadow">
-            <h3>Categorias Existentes</h3>
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
+<section class="dashboard-layout">
+    <div class="panel">
+        <h2>Categorias cadastradas</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Tipo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cat in categorias %}
                         <tr>
-                            <th>ID</th>
-                            <th>Nome da Categoria</th>
+                            <td>{{ cat.nome_categoria }}</td>
+                            <td>{{ cat.tipo }}</td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        {% for cat in categorias %}
-                            <tr>
-                                <td>#{{ cat.id }}</td>
-                                <td><strong>{{ cat.nome }}</strong></td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="2" class="text-muted text-center" style="padding: 20px 0;">Nenhuma categoria encontrada.</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                    {% empty %}
+                        <tr>
+                            <td colspan="2" class="empty-state">Nenhuma categoria cadastrada.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
-</div>
+
+    <div class="form-panel">
+        <h2>Nova categoria</h2>
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="nome_categoria">Nome da Categoria</label>
+                <input type="text" id="nome_categoria" name="nome_categoria" required class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="tipo">Tipo</label>
+                <select id="tipo" name="tipo" class="form-control">
+                    <option value="Receita">Receita</option>
+                    <option value="Despesa">Despesa</option>
+                    <option value="Produto">Produto</option>
+                    <option value="Serviço">Serviço</option>
+                    <option value="Geral">Geral</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn">Adicionar Categoria</button>
+        </form>
+    </div>
+</section>
 {% endblock %}

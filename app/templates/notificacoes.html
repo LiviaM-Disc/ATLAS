@@ -1,20 +1,78 @@
-{% extends 'base.html' %}
-{% load static %}
+{% extends "base.html" %}
+
+{% block title %}ATLAS - Notificações{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="card shadow">
-        <h3>Configurações de Avisos</h3>
-        <p class="text-muted">Marque quais alertas você deseja receber no seu painel.</p>
-        <form>
-            <label style="display: block; margin-bottom: 10px;">
-                <input type="checkbox" checked> Notificar-me quando o estoque de um produto estiver esgotando.
-            </label>
-            <label style="display: block; margin-bottom: 15px;">
-                <input type="checkbox" checked> Enviar resumo de fechamento financeiro por e-mail.
-            </label>
-            <button type="button" class="btn-primary">Salvar Preferências</button>
+<header class="page-header">
+    <div>
+        <h1>Notificações</h1>
+        <p>Acompanhe todas as suas notificações.</p>
+    </div>
+</header>
+
+<section class="dashboard-layout">
+    <div class="panel">
+        <h2>Notificações</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mensagem</th>
+                        <th>Tipo</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for notif in notificacoes %}
+                        <tr>
+                            <td>{{ notif.mensagem_notificacao }}</td>
+                            <td>{{ notif.tipo }}</td>
+                            <td>
+                                <span class="status-badge {% if notif.status_notificacao == 'Lida' %}lida{% else %}nao-lida{% endif %}">
+                                    {{ notif.status_notificacao }}
+                                </span>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="3" class="empty-state">Nenhuma notificação.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="form-panel">
+        <h2>Nova notificação</h2>
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="mensagem_notificacao">Mensagem</label>
+                <textarea id="mensagem_notificacao" name="mensagem_notificacao" required class="form-control" rows="3"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="tipo">Tipo</label>
+                <select id="tipo" name="tipo" class="form-control">
+                    <option value="Informação">Informação</option>
+                    <option value="Aviso">Aviso</option>
+                    <option value="Erro">Erro</option>
+                    <option value="Sucesso">Sucesso</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="status_notificacao">Status</label>
+                <select id="status_notificacao" name="status_notificacao" class="form-control">
+                    <option value="Não lida">Não lida</option>
+                    <option value="Lida">Lida</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn">Adicionar Notificação</button>
         </form>
     </div>
-</div>
+</section>
 {% endblock %}

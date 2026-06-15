@@ -1,33 +1,290 @@
-{% extends 'base.html' %}
-{% load static %}
+{% extends "base.html" %}
+
+{% block title %}ATLAS - Metas Financeiras{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="header-container">
-        <div class="page-title">
-            <h1>Metas de Faturamento</h1>
-            <p>Acompanhe o progresso financeiro mensal de <strong>{{ negocio.nome_negocio }}</strong>.</p>
-        </div>
-    </div>
 
-    <div class="card shadow" style="margin-bottom: 25px; background: #111; padding: 30px; border-radius: 8px;">
-        <h3 style="margin-top:0;">Meta do Mês Vigente</h3>
+<header class="page-header">
+    <div>
+        <h1>Metas Financeiras</h1>
+        <p>Acompanhe o progresso das metas dos seus negócios.</p>
+    </div>
+</header>
+
+<!-- Mensagens -->
+{% if messages %}
+    {% for message in messages %}
         
-        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; color: #aaa;">
-            <span>Progresso Atual: <strong>R$ {{ total_receitas }}</strong></span>
-            <span>Alvo Comercial: <strong>R$ {{ negocio.meta_mensal }}</strong></span>
-        </div>
+    {% endfor %}
+{% endif %}
 
-        <div style="width: 100%; background: #222; height: 20px; border-radius: 10px; overflow: hidden; border: 1px solid #333;">
-            <div style="width: 45%; background: linear-gradient(90deg, #c5a880, #e2ccb0); height: 100%; border-radius: 10px;"></div>
-        </div>
-        
-        <p style="font-size: 13px; color: #666; margin-top: 10px;">Você atingiu aproximadamente 45% da sua meta estimada de vendas para este ciclo.</p>
+<section class="dashboard-layout">
+
+    <!-- PROGRESSO DAS METAS -->
+    <div class="panel">
+
+        <h2>Progresso das Metas</h2>
+
+        {% if negocios %}
+
+            {% for negocio in negocios %}
+
+            <div style="margin-bottom:25px;padding:18px;border:1px solid #ddd;border-radius:8px;">
+
+                <h3>{{ negocio.nome_negocio }}</h3>
+
+                <p>
+                    <strong>Meta mensal:</strong>
+                    R$ {{ negocio.meta_mensal }}
+                </p>
+
+                <p>
+                    <strong>Receitas:</strong>
+                    R$ {{ negocio.total_receitas|default:0 }}
+                </p>
+
+                {% if negocio.meta_mensal > 0 %}
+
+                    {% widthratio negocio.total_receitas|default:0 negocio.meta_mensal 100 as progress %}
+
+                    <div style="
+                        width:100%;
+                        background:#e9ecef;
+                        height:22px;
+                        border-radius:6px;
+                        overflow:hidden;
+                    ">
+
+                        <
+                    </div>
+
+                    <p style="margin-top:8px;">
+
+                        {% if progress > 100 %}
+
+                            🎉 Meta ultrapassada ({{ progress }}%)
+
+                        {% else %}
+
+                            {{ progress }}% da meta
+
+                        {% endif %}
+
+                    </p>
+
+                {% else %}
+
+                    <p style="color:#777;">
+                        Nenhuma meta mensal cadastrada.
+                    </p>
+
+                {% endif %}
+
+            </div>
+
+            {% endfor %}
+
+        {% else %}
+
+            <div class="empty-state">
+                Nenhum negócio cadastrado.
+            </div>
+
+        {% endif %}
+
     </div>
 
-    <div class="card shadow">
-        <h3>Ajustar Planejamento</h3>
-        <p class="text-muted">Deseja redefinir os alvos da sua empresa? Altere o valor no painel de configurações do Negócio.</p>
+    <!-- HISTÓRICO -->
+
+    <div class="panel">
+
+        <h2>Histórico de Metas</h2>
+
+        <div class="table-container">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>Descrição</th>
+
+                        <th>Negócio</th>
+
+                        <th>Valor</th>
+
+                        <th>Prazo</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for meta in metas %}
+
+                    <tr>
+
+                        <td>{{ meta.descricao_meta }}</td>
+
+                        <td>{{ meta.negocio.nome_negocio }}</td>
+
+                        <td>R$ {{ meta.valor_meta }}</td>
+
+                        <td>
+
+                            {% if meta.prazo %}
+
+                                {{ meta.prazo|date:"d/m/Y" }}
+
+                            {% else %}
+
+                                Sem prazo
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+
+                        <td colspan="4" style="text-align:center;padding:20px;">
+
+                            Nenhuma meta cadastrada.
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
     </div>
-</div>
+
+</section>
+
+<!-- FORMULÁRIO -->
+
+<section class="form-panel" style="margin-top:30px;">
+
+    <h2>Nova Meta Financeira</h2>
+
+    {% if negocios %}
+
+    <form method="POST">
+
+        {% csrf_token %}
+
+        <div class="form-group">
+
+            <label>Descrição</label>
+
+            <input
+                type="text"
+                name="descricao_meta"
+                class="form-control"
+                required
+            >
+
+        </div>
+
+        <div class="form-group">
+
+            <label>Valor da Meta</label>
+
+            <input
+                type="number"
+                name="valor_meta"
+                step="0.01"
+                min="0"
+                class="form-control"
+                required
+            >
+
+        </div>
+
+        <div class="form-group">
+
+            <label>Prazo</label>
+
+            <input
+                type="date"
+                name="prazo"
+                class="form-control"
+            >
+
+        </div>
+
+        <div class="form-group">
+
+            <label>Negócio</label>
+
+            <select
+                name="negocio"
+                class="form-control"
+                required
+            >
+
+                <option value="">Selecione...</option>
+
+                {% for negocio in negocios %}
+
+                <option value="{{ negocio.id }}">
+
+                    {{ negocio.nome_negocio }}
+
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+        <button
+            type="submit"
+            class="btn"
+            style="
+                margin-top:15px;
+                background:#18a18a;
+                color:white;
+                padding:10px 20px;
+                border:none;
+                border-radius:5px;
+                cursor:pointer;
+            "
+        >
+
+            Adicionar Meta
+
+        </button>
+
+    </form>
+
+    {% else %}
+
+    <div style="
+        padding:20px;
+        background:#fff3cd;
+        border-radius:5px;
+        color:#856404;
+    ">
+
+        Você precisa cadastrar um negócio antes de criar metas.
+
+    </div>
+
+    {% endif %}
+
+</section>
+
 {% endblock %}

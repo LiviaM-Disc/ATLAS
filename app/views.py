@@ -1,8 +1,26 @@
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.hashers import check_password, make_password
 from django.db.models import Sum
-from .models import Usuario, Negocio, Receita, Despesa, Produto, Categoria, Precificacao
+from .models import (
+    Usuario,
+    Negocio,
+    Receita,
+    Despesa,
+    Produto,
+    Categoria,
+    Precificacao,
+    MetaFinanceira,
+    Servico,
+    Relatorio,
+    Alerta,
+    FechamentoMensal,
+    IndicadorFinanceiro,
+    Notificacao,
+)
+
+
 
 # ==============================================================================
 # --- AUTENTICAÇÃO E SESSÃO ---
@@ -214,11 +232,59 @@ def servicos_view(request):
         return redirect('login')
     return render(request, 'servicos.html')
 
-
 def metas_view(request):
+
     if 'usuario_id' not in request.session:
         return redirect('login')
-    return render(request, 'metas.html')
+
+    usuario_id = request.session['usuario_id']
+
+    if request.method == 'POST':
+
+        descricao = request.POST.get('descricao_meta')
+        valor = request.POST.get('valor_meta')
+        prazo = request.POST.get('prazo')
+        negocio_id = request.POST.get('negocio')
+
+        if not negocio_id:
+            messages.error(request, "Selecione um negócio.")
+            return redirect('metas')
+
+        negocio = get_object_or_404(
+            Negocio,
+            id=negocio_id,
+            usuario_id=usuario_id
+        )
+
+        MetaFinanceira.objects.create(
+            descricao_meta=descricao,
+            valor_meta=valor,
+            prazo=prazo,
+            negocio=negocio
+        )
+
+        messages.success(request, "Meta cadastrada com sucesso.")
+
+        return redirect('metas')
+
+    negocios = Negocio.objects.filter(usuario_id=usuario_id).annotate(
+    total_receitas=Sum('receita__valor')
+    )
+    total_receitas=Sum('receita__valor')
+
+
+    metas = MetaFinanceira.objects.filter(
+        negocio__usuario_id=usuario_id
+    )
+
+    return render(
+        request,
+        'metas.html',
+        {
+            'metas': metas,
+            'negocios': negocios
+        }
+    )
 
 
 def alertas_view(request):

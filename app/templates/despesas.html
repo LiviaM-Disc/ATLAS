@@ -1,65 +1,103 @@
-{% extends 'base.html' %}
-{% load static %}
+{% extends "base.html" %}
+
+{% block title %}ATLAS - Despesas{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="header-container">
-        <div class="page-title">
-            <h1>Controle de Despesas</h1>
-            <p>Monitore os custos operacionais, contas fixas e gastos do seu negócio.</p>
-        </div>
+<header class="page-header">
+    <div>
+        <h1>Despesas</h1>
+        <p>Acompanhe todas as despesas dos seus negócios.</p>
     </div>
+</header>
 
-    <div class="main-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
-        <div class="card shadow">
-            <h3>Histórico de Gastos</h3>
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
+<section class="dashboard-layout">
+    <div class="panel">
+        <h2>Histórico de despesas</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Descrição</th>
+                        <th>Negócio</th>
+                        <th>Data</th>
+                        <th>Status</th>
+                        <th>Valor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for despesa in despesas %}
                         <tr>
-                            <th>Data</th>
-                            <th>Categoria/Descrição</th>
-                            <th>Valor</th>
+                            <td>{{ despesa.descricao_despesa }}</td>
+                            <td>{{ despesa.negocio.nome_negocio }}</td>
+                            <td>{{ despesa.data_despesa|date:"d/m/Y" }}</td>
+                            <td>
+                                <span class="status-badge {% if despesa.status == 'Paga' %}paga{% elif despesa.status == 'Pendente' %}pendente{% else %}cancelada{% endif %}">
+                                    {{ despesa.status }}
+                                </span>
+                            </td>
+                            <td>R$ {{ despesa.valor_despesa }}</td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        {% for despesa in despesas %}
-                            <tr>
-                                <td>{{ despesa.data|date:"d/m/Y" }}</td>
-                                <td>{{ despesa.descricao }}</td>
-                                <td style="color: #dc3545; font-weight: bold;">- R$ {{ despesa.valor }}</td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="3" class="text-muted text-center" style="padding: 40px 0;">
-                                    Nenhuma despesa catalogada para este período.
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="card shadow">
-            <h3>Lançar Nova Despesa</h3>
-            <form method="POST" action="">
-                {% csrf_token %}
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label for="descricao_despesa">Descrição da Despesa</label>
-                    <input id="descricao_despesa" name="descricao" type="text" required class="form-control" placeholder="Ex: Conta de Energia" style="width:100%; padding:10px; background:#161616; border:1px solid #333; color:white; border-radius:4px;">
-                </div>
-
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label for="valor_despesa">Valor Pago (R$)</label>
-                    <input id="valor_despesa" name="valor" type="number" step="0.01" required class="form-control" placeholder="0.00" style="width:100%; padding:10px; background:#161616; border:1px solid #333; color:white; border-radius:4px;">
-                </div>
-
-                <button type="submit" class="btn-primary" style="width: 100%; padding: 12px; background: #c5a880; color: black; font-weight: bold; border: none; border-radius: 4px; cursor: pointer;">
-                    Registrar Despesa
-                </button>
-            </form>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="empty-state">Nenhuma despesa cadastrada.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
-</div>
+
+    <div class="form-panel">
+        <h2>Nova despesa</h2>
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="descricao_despesa">Descrição</label>
+                <input type="text" id="descricao_despesa" name="descricao_despesa" required class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="valor_despesa">Valor (R$)</label>
+                <input type="number" id="valor_despesa" name="valor_despesa" step="0.01" min="0" required class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="data_despesa">Data</label>
+                <input type="date" id="data_despesa" name="data_despesa" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="status">Status</label>
+                <select id="status" name="status" class="form-control">
+                    <option value="Pendente">Pendente</option>
+                    <option value="Paga">Paga</option>
+                    <option value="Cancelada">Cancelada</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="categoria">Categoria</label>
+                <select id="categoria" name="categoria" required class="form-control">
+                    <option value="">Selecione uma categoria</option>
+                    {% for cat in categorias %}
+                        <option value="{{ cat.id }}">{{ cat.nome_categoria }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="negocio">Negócio</label>
+                <select id="negocio" name="negocio" required class="form-control">
+                    <option value="">Selecione um negócio</option>
+                    {% for neg in negocios %}
+                        <option value="{{ neg.id }}">{{ neg.nome_negocio }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="btn">Adicionar Despesa</button>
+        </form>
+    </div>
+</section>
 {% endblock %}

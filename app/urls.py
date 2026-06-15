@@ -2,33 +2,88 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    # Autenticação e Sessão
+
+    # ==========================
+    # AUTENTICAÇÃO
+    # ==========================
     path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
     path('cadastro/', views.cadastro_view, name='cadastro'),
     path('cadastrar-negocio/', views.cadastrar_negocio_view, name='cadastrar_negocio'),
-    path('logout/', views.logout_view, name='logout'),
 
-    # Dashboard Principal
+    # ==========================
+    # DASHBOARD
+    # ==========================
     path('', views.index_view, name='index'),
 
-    # Módulos Específicos
+    # ==========================
+    # NEGÓCIOS
+    # ==========================
     path('negocios/', views.listar_negocios, name='listar_negocios'),
+
+    # ==========================
+    # RECEITAS
+    # ==========================
     path('receitas/', views.lista_receitas, name='lista_receitas'),
+
+    # ==========================
+    # DESPESAS
+    # ==========================
     path('despesas/', views.despesas_view, name='despesas'),
+
+    # ==========================
+    # PRODUTOS
+    # ==========================
     path('produtos/', views.produtos_view, name='produtos'),
-    path('categorias/', views.categoria_view, name='categorias'),
+
+    # ==========================
+    # SERVIÇOS
+    # ==========================
     path('servicos/', views.servicos_view, name='servicos'),
+
+    # ==========================
+    # CATEGORIAS
+    # ==========================
+    path('categorias/', views.categoria_view, name='categorias'),
+
+    # ==========================
+    # PRECIFICAÇÃO
+    # ==========================
     path('precificacoes/', views.precificacoes_view, name='precificacoes'),
+
+    # ==========================
+    # METAS
+    # ==========================
     path('metas/', views.metas_view, name='metas'),
-    
-    # Páginas Extras da Barra Lateral
+
+    # ==========================
+    # ALERTAS
+    # ==========================
     path('alertas/', views.alertas_view, name='alertas'),
-    path('fechamentos/', views.fechamentos_view, name='fechamentos'),
-    path('indicadores/', views.indicadores_view, name='indicadores'),
-    path('notificacoes/', views.notificacoes_view, name='notificacoes'),
+
+    # ==========================
+    # RELATÓRIOS
+    # ==========================
     path('relatorios/', views.relatorios_view, name='relatorios'),
+
+    # ==========================
+    # INDICADORES
+    # ==========================
+    path('indicadores/', views.indicadores_view, name='indicadores'),
+
+    # ==========================
+    # FECHAMENTO MENSAL
+    # ==========================
+    path('fechamentos/', views.fechamentos_view, name='fechamentos'),
+
+    # ==========================
+    # NOTIFICAÇÕES
+    # ==========================
+    path('notificacoes/', views.notificacoes_view, name='notificacoes'),
+
+    # ==========================
+    # USUÁRIOS
+    # ==========================
     path('usuarios/', views.usuarios_view, name='usuarios'),
-    path('fechamentos/', views.fechamentos_view, name='fechamentos_mensais'),
-    path('indicadores/', views.indicadores_view, name='indicadores_financeiros'),
-    path('usuarios/', views.usuarios_view, name='usuarios'),
+
 ]
