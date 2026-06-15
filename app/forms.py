@@ -151,6 +151,11 @@ class PrecificacaoForm(AtlasModelForm):
         model = Precificacao
         fields = ["custo_total", "margem_lucro", "impostos", "preco_final", "produto", "servico"]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["produto"].required = False
+        self.fields["servico"].required = False
+
 
 class RelatorioForm(AtlasModelForm):
     class Meta:

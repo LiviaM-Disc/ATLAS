@@ -106,8 +106,8 @@ class Precificacao (models.Model):
     impostos=models.DecimalField(max_digits=10, decimal_places=2,verbose_name="Impostos")
     preco_final=models.DecimalField(max_digits=100,decimal_places=2,verbose_name= "Preço Final")
 
-    produto=models.ForeignKey(Produto,on_delete=models.CASCADE, verbose_name="Produto")
-    servico=models.ForeignKey(Servico, on_delete=models.CASCADE,verbose_name="Servico")
+    produto=models.ForeignKey(Produto,on_delete=models.CASCADE, null=True, blank=True, verbose_name="Produto")
+    servico=models.ForeignKey(Servico, on_delete=models.CASCADE, null=True, blank=True, verbose_name="Servico")
 
     def __str__(self):
         return f"{self.custo_total},{self.margem_lucro},{self.impostos},{self.preco_final}"

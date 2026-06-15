@@ -47,6 +47,21 @@
                 <a class="{% if request.resolver_match.url_name == 'relatorios' %}active{% endif %}" href="{% url 'relatorios' %}">
                     <i class="fa-solid fa-chart-pie"></i> Relatórios
                 </a>
+                <a class="{% if request.resolver_match.url_name == 'categorias' %}active{% endif %}" href="{% url 'categorias' %}">
+                    <i class="fa-solid fa-tags"></i> Categorias
+                </a>
+                <a class="{% if request.resolver_match.url_name == 'fechamentos' %}active{% endif %}" href="{% url 'fechamentos' %}">
+                    <i class="fa-solid fa-calendar-check"></i> Fechamentos
+                </a>
+                <a class="{% if request.resolver_match.url_name == 'indicadores' %}active{% endif %}" href="{% url 'indicadores' %}">
+                    <i class="fa-solid fa-chart-line"></i> Indicadores
+                </a>
+                <a class="{% if request.resolver_match.url_name == 'notificacoes' %}active{% endif %}" href="{% url 'notificacoes' %}">
+                    <i class="fa-solid fa-bell"></i> Notificações
+                </a>
+                <a class="{% if request.resolver_match.url_name == 'usuarios' %}active{% endif %}" href="{% url 'usuarios' %}">
+                    <i class="fa-solid fa-user"></i> Perfil
+                </a>
             </nav>
 
             <div class="user-footer">

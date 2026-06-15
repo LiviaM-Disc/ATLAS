@@ -301,6 +301,26 @@ tr:hover td {
     color: var(--accent-strong);
 }
 
+.status-badge.paga,
+.status-badge.baixa,
+.status-badge.lida {
+    background: rgba(24, 161, 138, .14);
+    color: #70dfcd;
+}
+
+.status-badge.pendente,
+.status-badge.media,
+.status-badge.nao-lida {
+    background: rgba(201, 168, 106, .14);
+    color: var(--accent-strong);
+}
+
+.status-badge.cancelada,
+.status-badge.alta {
+    background: rgba(227, 93, 93, .14);
+    color: #ff9c9c;
+}
+
 .empty-state {
     color: var(--text-secondary);
     padding: 22px;
@@ -329,7 +349,8 @@ label {
 }
 
 input,
-select {
+select,
+textarea {
     background: #121614;
     border: 1px solid var(--border);
     border-radius: 8px;
@@ -341,9 +362,42 @@ select {
 }
 
 input:focus,
-select:focus {
+select:focus,
+textarea:focus {
     border-color: var(--accent);
     outline: 0;
+}
+
+textarea {
+    min-height: 96px;
+    resize: vertical;
+}
+
+.goal-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 16px;
+    padding: 16px;
+}
+
+.goal-card h3 {
+    margin-bottom: 8px;
+}
+
+.progress-track {
+    background: #111513;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    height: 18px;
+    margin-top: 12px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    background: var(--teal);
+    height: 100%;
+    max-width: 100%;
+    width: var(--progress, 0%);
 }
 
 .messages {

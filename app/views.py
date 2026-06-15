@@ -1,341 +1,640 @@
+import json
+from collections import defaultdict
+from datetime import date
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+from functools import wraps
 
-from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import check_password, make_password
-from django.db.models import Sum
+from django.db.models import Q, Sum
+from django.db.models.functions import TruncMonth
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+
 from .models import (
-    Usuario,
-    Negocio,
-    Receita,
-    Despesa,
-    Produto,
-    Categoria,
-    Precificacao,
-    MetaFinanceira,
-    Servico,
-    Relatorio,
     Alerta,
-    FechamentoMensal,
-    IndicadorFinanceiro,
+    Categoria,
+    Despesa,
+    MetaFinanceira,
+    Negocio,
     Notificacao,
+    Precificacao,
+    Produto,
+    Receita,
+    Relatorio,
+    Servico,
+    Usuario,
 )
 
 
+ZERO = Decimal("0.00")
+CENTAVOS = Decimal("0.01")
 
-# ==============================================================================
-# --- AUTENTICAÇÃO E SESSÃO ---
-# ==============================================================================
+
+def decimal_from_post(value, default=ZERO):
+    if value in (None, ""):
+        return default
+    try:
+        return Decimal(str(value).replace(",", ".")).quantize(CENTAVOS)
+    except (InvalidOperation, ValueError):
+        return default
+
+
+def int_from_post(value, default=0):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def date_from_post(value):
+    if not value:
+        return timezone.localdate()
+    try:
+        return date.fromisoformat(value)
+    except ValueError:
+        return timezone.localdate()
+
+
+def money_sum(queryset, field):
+    return queryset.aggregate(total=Sum(field))["total"] or ZERO
+
+
+def get_usuario_logado(request):
+    usuario_id = request.session.get("usuario_id")
+    if not usuario_id:
+        return None
+    return Usuario.objects.filter(pk=usuario_id).first()
+
+
+def atlas_login_required(view_func):
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        usuario = get_usuario_logado(request)
+        if not usuario:
+            request.session.flush()
+            return redirect("login")
+        request.atlas_usuario = usuario
+        return view_func(request, *args, **kwargs)
+
+    return wrapper
+
+
+def negocios_do_usuario(usuario):
+    return Negocio.objects.filter(usuario=usuario).order_by("nome_negocio")
+
+
+def categorias_ordenadas():
+    return Categoria.objects.all().order_by("tipo", "nome_categoria")
+
+
+def calcular_preco_final(custo, margem, impostos):
+    percentual_total = margem + impostos
+    if custo <= ZERO or percentual_total >= Decimal("100"):
+        return None
+    divisor = Decimal("1") - (percentual_total / Decimal("100"))
+    return (custo / divisor).quantize(CENTAVOS, rounding=ROUND_HALF_UP)
+
+
+def aplicar_margem(objetos, custo_attr, preco_attr):
+    for item in objetos:
+        custo = getattr(item, custo_attr) or ZERO
+        preco = getattr(item, preco_attr) or ZERO
+        item.margem_calculada = ZERO
+        if preco > ZERO:
+            item.margem_calculada = ((preco - custo) / preco * Decimal("100")).quantize(
+                CENTAVOS,
+                rounding=ROUND_HALF_UP,
+            )
+    return objetos
+
+
+def calcular_fechamentos(usuario):
+    receitas = (
+        Receita.objects.filter(negocio__usuario=usuario)
+        .annotate(mes=TruncMonth("data"))
+        .values("negocio_id", "negocio__nome_negocio", "mes")
+        .annotate(total=Sum("valor"))
+    )
+    despesas = (
+        Despesa.objects.filter(negocio__usuario=usuario)
+        .annotate(mes=TruncMonth("data_despesa"))
+        .values("negocio_id", "negocio__nome_negocio", "mes")
+        .annotate(total=Sum("valor_despesa"))
+    )
+
+    por_mes = defaultdict(lambda: {"receita_total": ZERO, "despesa_total": ZERO})
+
+    for item in receitas:
+        chave = (item["negocio_id"], item["mes"])
+        por_mes[chave]["negocio_nome"] = item["negocio__nome_negocio"]
+        por_mes[chave]["periodo"] = item["mes"]
+        por_mes[chave]["receita_total"] = item["total"] or ZERO
+
+    for item in despesas:
+        chave = (item["negocio_id"], item["mes"])
+        por_mes[chave]["negocio_nome"] = item["negocio__nome_negocio"]
+        por_mes[chave]["periodo"] = item["mes"]
+        por_mes[chave]["despesa_total"] = item["total"] or ZERO
+
+    fechamentos = []
+    for dados in por_mes.values():
+        receita_total = dados["receita_total"]
+        despesa_total = dados["despesa_total"]
+        lucro_liquido = receita_total - despesa_total
+        dados["lucro_liquido"] = lucro_liquido
+        dados["saldo_final"] = lucro_liquido
+        fechamentos.append(dados)
+
+    return sorted(fechamentos, key=lambda item: item["periodo"], reverse=True)
+
+
+def calcular_indicadores(usuario):
+    indicadores = []
+    for negocio in negocios_do_usuario(usuario):
+        receitas = Receita.objects.filter(negocio=negocio)
+        despesas = Despesa.objects.filter(negocio=negocio)
+        produtos = Produto.objects.filter(negocio=negocio)
+        servicos = Servico.objects.filter(negocio=negocio)
+
+        total_receitas = money_sum(receitas, "valor")
+        total_despesas = money_sum(despesas, "valor_despesa")
+        total_custos = money_sum(produtos, "custo") + money_sum(servicos, "custo_operacional")
+        lucro = total_receitas - total_despesas
+        margem = ZERO
+        ticket_medio = ZERO
+
+        if total_receitas > ZERO:
+            margem = (lucro / total_receitas * Decimal("100")).quantize(CENTAVOS)
+
+        quantidade_receitas = receitas.count()
+        if quantidade_receitas:
+            ticket_medio = (total_receitas / Decimal(quantidade_receitas)).quantize(CENTAVOS)
+
+        indicadores.append(
+            {
+                "negocio": negocio,
+                "receitas": total_receitas,
+                "despesas": total_despesas,
+                "custos": total_custos,
+                "lucro": lucro,
+                "margem_lucro": margem,
+                "ponto_equilibrio": total_despesas + total_custos,
+                "ticket_medio": ticket_medio,
+            }
+        )
+
+    return indicadores
+
 
 def login_view(request):
-    if 'usuario_id' in request.session:
-        return redirect('index')
+    if "usuario_id" in request.session:
+        return redirect("index")
 
-    if request.method == 'POST':
-        email_post = request.POST.get('email')
-        senha_post = request.POST.get('senha')
-
-        usuario = Usuario.objects.filter(email=email_post).first()
+    if request.method == "POST":
+        identificador = request.POST.get("email", "").strip()
+        senha_post = request.POST.get("senha", "")
+        usuario = Usuario.objects.filter(Q(email=identificador) | Q(nome=identificador)).first()
 
         if usuario and check_password(senha_post, usuario.senha):
-            request.session['usuario_id'] = usuario.id
-            request.session['usuario_nome'] = usuario.nome
-            return redirect('index')
-        else:
-            messages.error(request, "E-mail ou senha inválidos.")
-    
-    return render(request, 'login.html')
+            request.session["usuario_id"] = usuario.id
+            request.session["usuario_nome"] = usuario.nome
+            return redirect("index")
+
+        auth_user = authenticate(request, username=identificador, password=senha_post)
+        if auth_user:
+            email = auth_user.email or f"{auth_user.username}@atlas.local"
+            usuario, _ = Usuario.objects.update_or_create(
+                email=email,
+                defaults={
+                    "nome": auth_user.get_full_name() or auth_user.username,
+                    "senha": make_password(senha_post),
+                    "tipo_usuario": "Administrador" if auth_user.is_staff else "MEI",
+                },
+            )
+            request.session["usuario_id"] = usuario.id
+            request.session["usuario_nome"] = usuario.nome
+            return redirect("index")
+
+        messages.error(request, "Usuario/e-mail ou senha invalidos.")
+
+    return render(request, "login.html")
 
 
 def cadastro_view(request):
-    if request.method == 'POST':
-        nome = request.POST.get('nome')
-        email = request.POST.get('email')
-        senha = request.POST.get('senha')
-        
-        if Usuario.objects.filter(email=email).exists():
-            messages.error(request, "Este e-mail já está cadastrado.")
+    if request.method == "POST":
+        nome = request.POST.get("nome", "").strip()
+        email = request.POST.get("email", "").strip()
+        senha = request.POST.get("senha", "")
+
+        if not nome or not email or not senha:
+            messages.error(request, "Preencha nome, e-mail e senha para criar a conta.")
+        elif Usuario.objects.filter(email=email).exists():
+            messages.error(request, "Este e-mail ja esta cadastrado.")
         else:
-            novo_usuario = Usuario(
+            novo_usuario = Usuario.objects.create(
                 nome=nome,
                 email=email,
-                senha=make_password(senha)
+                senha=make_password(senha),
             )
-            novo_usuario.save()
-            
-            request.session['usuario_id'] = novo_usuario.id
-            request.session['usuario_nome'] = novo_usuario.nome
-            
-            messages.success(request, "Cadastro realizado! Agora, vamos configurar sua empresa.")
-            return redirect('cadastrar_negocio')
-            
-    return render(request, 'cadastro.html')
+            request.session["usuario_id"] = novo_usuario.id
+            request.session["usuario_nome"] = novo_usuario.nome
+            messages.success(request, "Cadastro realizado. Agora configure seu negocio.")
+            return redirect("cadastrar_negocio")
+
+    return render(request, "cadastro.html")
 
 
+@atlas_login_required
 def cadastrar_negocio_view(request):
-    if 'usuario_id' not in request.session:
-        return redirect('login')
+    usuario = request.atlas_usuario
 
-    if request.method == 'POST':
-        nome_do_formulario = request.POST.get('nome_negocio')
-        segmento_do_formulario = request.POST.get('segmento')
-        meta_do_formulario = request.POST.get('meta_mensal') or 0.0
-        capital_do_formulario = request.POST.get('capital_inicial') or 0.0
+    if request.method == "POST":
+        nome = request.POST.get("nome_negocio", "").strip()
+        segmento = request.POST.get("segmento", "").strip()
+        meta_mensal = decimal_from_post(request.POST.get("meta_mensal"))
+        capital_inicial = decimal_from_post(request.POST.get("capital_inicial"))
 
-        if nome_do_formulario:
-            usuario_id = request.session['usuario_id']
-            usuario_instancia = get_object_or_404(Usuario, id=usuario_id)
-
-            novo_negocio = Negocio(
-                nome_negocio=nome_do_formulario,  
-                usuario=usuario_instancia,
-                segmento=segmento_do_formulario,
-                meta_mensal=meta_do_formulario,
-                capital_inicial=capital_do_formulario
-            )
-            novo_negocio.save()
-
-            messages.success(request, "Empresa cadastrada com sucesso!")
-            return redirect('index')
+        if not nome:
+            messages.error(request, "O nome do negocio e obrigatorio.")
         else:
-            messages.error(request, "O nome da empresa é obrigatório.")
+            Negocio.objects.create(
+                nome_negocio=nome,
+                segmento=segmento or "Nao informado",
+                meta_mensal=meta_mensal,
+                capital_inicial=capital_inicial,
+                usuario=usuario,
+            )
+            messages.success(request, "Negocio cadastrado com sucesso.")
+            return redirect("index")
 
-    return render(request, 'negocio_form.html')
+    return render(request, "negocio_form.html")
 
 
 def logout_view(request):
     request.session.flush()
-    return redirect('login')
+    return redirect("login")
 
 
-# ==============================================================================
-# --- DASHBOARD PRINCIPAL ---
-# ==============================================================================
-
+@atlas_login_required
 def index_view(request):
-    if 'usuario_id' not in request.session:
-        return redirect('login')
-    
-    usuario_id = request.session['usuario_id']
-    
-    resultado_soma = Receita.objects.filter(negocio__usuario_id=usuario_id).aggregate(total=Sum('valor'))
-    total_receitas = resultado_soma['total'] or 0.0
-    
-    meus_negocios = Negocio.objects.filter(usuario_id=usuario_id)
-    
+    usuario = request.atlas_usuario
+    receitas = Receita.objects.filter(negocio__usuario=usuario).select_related("negocio")
+    despesas = Despesa.objects.filter(negocio__usuario=usuario).select_related("negocio")
+    negocios = negocios_do_usuario(usuario)
+
+    total_receitas = money_sum(receitas, "valor")
+    total_despesas = money_sum(despesas, "valor_despesa")
+    capital_total = money_sum(negocios, "capital_inicial")
+    saldo = capital_total + total_receitas - total_despesas
+
     context = {
-        'nome': request.session.get('usuario_nome'),
-        'total_receitas': total_receitas,
-        'qtd_negocios': meus_negocios.count(),
-        'negocios': meus_negocios,
+        "nome": usuario.nome,
+        "total_receitas": total_receitas,
+        "total_despesas": total_despesas,
+        "saldo": saldo,
+        "qtd_negocios": negocios.count(),
+        "negocios": negocios,
+        "ultimas_receitas": receitas.order_by("-data", "-id")[:5],
+        "ultimas_despesas": despesas.order_by("-data_despesa", "-id")[:5],
+        "chart_labels": json.dumps(["Receitas", "Despesas", "Saldo"]),
+        "chart_values": json.dumps([float(total_receitas), float(total_despesas), float(saldo)]),
     }
-    return render(request, 'index.html', context)
+    return render(request, "index.html", context)
 
 
-# ==============================================================================
-# --- MÓDULOS ESPECÍFICOS (VIEWS INDEPENDENTES) ---
-# ==============================================================================
-
+@atlas_login_required
 def listar_negocios(request):
-    if 'usuario_id' not in request.session:
-        return redirect('login')
-        
-    usuario_id = request.session.get('usuario_id')
-    negocios = Negocio.objects.filter(usuario_id=usuario_id)
-    return render(request, 'negocios.html', {'negocios': negocios})
+    return render(request, "negocios.html", {"negocios": negocios_do_usuario(request.atlas_usuario)})
 
 
+@atlas_login_required
 def lista_receitas(request):
-    if 'usuario_id' not in request.session:
-        return redirect('login')
-        
-    receitas = Receita.objects.filter(negocio__usuario_id=request.session['usuario_id'])
-    return render(request, 'receitas.html', {'receitas': receitas})
+    usuario = request.atlas_usuario
 
-
-def precificacoes_view(request):
-    if 'usuario_id' not in request.session:
-        return redirect('login')
-        
-    usuario_id = request.session['usuario_id']
-    
-    dados_precificacao = Precificacao.objects.filter(
-        produto__negocio__usuario_id=usuario_id
-    ) | Precificacao.objects.filter(
-        servico__negocio__usuario_id=usuario_id
-    )
-    
-    context = {
-        'precificacoes': dados_precificacao.distinct()
-    }
-    return render(request, 'precificacoes.html', context)
-
-
-def produtos_view(request):
-    if 'usuario_id' not in request.session:
-        return redirect('login')
-        
-    usuario_id = request.session.get('usuario_id')
-    negocio = Negocio.objects.filter(usuario_id=usuario_id).first()
-    
-    if not negocio:
-        messages.warning(request, "Você precisa cadastrar um negócio antes de gerenciar produtos.")
-        return redirect('cadastrar_negocio')
-
-    if request.method == 'POST':
-        nome_produto = request.POST.get('nome_produto')
-        preco_venda = request.POST.get('preco_venda') or 0.0
-        custo_producao = request.POST.get('custo_producao') or 0.0
-        estoque = request.POST.get('estoque') or 0
-        categoria_id = request.POST.get('categoria') 
-
-        if nome_produto and categoria_id:
-            categoria_instancia = get_object_or_404(Categoria, id=categoria_id)
-
-            novo_produto = Produto(
-                nome=nome_produto,
-                preco_venda=preco_venda,
-                custo=custo_producao,
-                estoque=estoque,
-                negocio=negocio,
-                categoria=categoria_instancia 
-            )
-            novo_produto.save()
-            messages.success(request, f"Produto '{nome_produto}' adicionado com sucesso!")
-            return redirect('produtos')
-        else:
-            messages.error(request, "O nome do produto e a categoria são obrigatórios.")
-
-    categorias = Categoria.objects.all()
-    produtos = Produto.objects.filter(negocio=negocio)
-    
-    return render(request, 'produtos.html', {
-        'produtos': produtos,
-        'negocio': negocio,
-        'categorias': categorias 
-    })
-
-
-
-# ==============================================================================
-# --- NOVAS VIEWS ADICIONADAS PARA SUPORTE TOTAL ---
-# ==============================================================================
-
-def despesas_view(request):
-    if 'usuario_id' not in request.session:
-        return redirect('login')
-    # Adicione a lógica de busca do banco se necessário, ex: Despesa.objects.all()
-    return render(request, 'despesas.html')
-
-
-def servicos_view(request):
-    if 'usuario_id' not in request.session:
-        return redirect('login')
-    return render(request, 'servicos.html')
-
-def metas_view(request):
-
-    if 'usuario_id' not in request.session:
-        return redirect('login')
-
-    usuario_id = request.session['usuario_id']
-
-    if request.method == 'POST':
-
-        descricao = request.POST.get('descricao_meta')
-        valor = request.POST.get('valor_meta')
-        prazo = request.POST.get('prazo')
-        negocio_id = request.POST.get('negocio')
-
-        if not negocio_id:
-            messages.error(request, "Selecione um negócio.")
-            return redirect('metas')
-
-        negocio = get_object_or_404(
-            Negocio,
-            id=negocio_id,
-            usuario_id=usuario_id
+    if request.method == "POST":
+        negocio = get_object_or_404(Negocio, pk=request.POST.get("negocio"), usuario=usuario)
+        categoria = get_object_or_404(Categoria, pk=request.POST.get("categoria"))
+        Receita.objects.create(
+            descricao=request.POST.get("descricao", "").strip(),
+            valor=decimal_from_post(request.POST.get("valor")),
+            data=date_from_post(request.POST.get("data")),
+            forma_pagamento=request.POST.get("forma_pagamento", "Outro"),
+            categoria=categoria,
+            negocio=negocio,
         )
+        messages.success(request, "Receita cadastrada com sucesso.")
+        return redirect("lista_receitas")
 
-        MetaFinanceira.objects.create(
-            descricao_meta=descricao,
-            valor_meta=valor,
-            prazo=prazo,
-            negocio=negocio
-        )
-
-        messages.success(request, "Meta cadastrada com sucesso.")
-
-        return redirect('metas')
-
-    negocios = Negocio.objects.filter(usuario_id=usuario_id).annotate(
-    total_receitas=Sum('receita__valor')
-    )
-    total_receitas=Sum('receita__valor')
-
-
-    metas = MetaFinanceira.objects.filter(
-        negocio__usuario_id=usuario_id
-    )
-
+    receitas = Receita.objects.filter(negocio__usuario=usuario).select_related("categoria", "negocio")
     return render(
         request,
-        'metas.html',
+        "receitas.html",
         {
-            'metas': metas,
-            'negocios': negocios
-        }
+            "receitas": receitas.order_by("-data", "-id"),
+            "categorias": categorias_ordenadas(),
+            "negocios": negocios_do_usuario(usuario),
+        },
     )
 
 
+@atlas_login_required
+def despesas_view(request):
+    usuario = request.atlas_usuario
+
+    if request.method == "POST":
+        negocio = get_object_or_404(Negocio, pk=request.POST.get("negocio"), usuario=usuario)
+        categoria = get_object_or_404(Categoria, pk=request.POST.get("categoria"))
+        Despesa.objects.create(
+            descricao_despesa=request.POST.get("descricao_despesa", "").strip(),
+            valor_despesa=decimal_from_post(request.POST.get("valor_despesa")),
+            data_despesa=date_from_post(request.POST.get("data_despesa")),
+            status=request.POST.get("status", "Pendente"),
+            categoria=categoria,
+            negocio=negocio,
+        )
+        messages.success(request, "Despesa cadastrada com sucesso.")
+        return redirect("despesas")
+
+    despesas = Despesa.objects.filter(negocio__usuario=usuario).select_related("categoria", "negocio")
+    return render(
+        request,
+        "despesas.html",
+        {
+            "despesas": despesas.order_by("-data_despesa", "-id"),
+            "categorias": categorias_ordenadas(),
+            "negocios": negocios_do_usuario(usuario),
+        },
+    )
+
+
+@atlas_login_required
+def produtos_view(request):
+    usuario = request.atlas_usuario
+
+    if request.method == "POST":
+        negocio = get_object_or_404(Negocio, pk=request.POST.get("negocio"), usuario=usuario)
+        categoria = get_object_or_404(Categoria, pk=request.POST.get("categoria"))
+        Produto.objects.create(
+            nome=request.POST.get("nome_produto", "").strip(),
+            custo=decimal_from_post(request.POST.get("custo_producao")),
+            preco_venda=decimal_from_post(request.POST.get("preco_venda")),
+            estoque=int_from_post(request.POST.get("estoque")),
+            categoria=categoria,
+            negocio=negocio,
+        )
+        messages.success(request, "Produto cadastrado com sucesso.")
+        return redirect("produtos")
+
+    produtos = list(
+        Produto.objects.filter(negocio__usuario=usuario)
+        .select_related("categoria", "negocio")
+        .order_by("nome")
+    )
+    return render(
+        request,
+        "produtos.html",
+        {
+            "produtos": aplicar_margem(produtos, "custo", "preco_venda"),
+            "categorias": categorias_ordenadas(),
+            "negocios": negocios_do_usuario(usuario),
+        },
+    )
+
+
+@atlas_login_required
+def servicos_view(request):
+    usuario = request.atlas_usuario
+
+    if request.method == "POST":
+        negocio = get_object_or_404(Negocio, pk=request.POST.get("negocio"), usuario=usuario)
+        categoria = get_object_or_404(Categoria, pk=request.POST.get("categoria"))
+        Servico.objects.create(
+            nome_servico=request.POST.get("nome_servico", "").strip(),
+            custo_operacional=decimal_from_post(request.POST.get("custo_operacional")),
+            valor_servico=decimal_from_post(request.POST.get("valor_servico")),
+            categoria=categoria,
+            negocio=negocio,
+        )
+        messages.success(request, "Servico cadastrado com sucesso.")
+        return redirect("servicos")
+
+    servicos = list(
+        Servico.objects.filter(negocio__usuario=usuario)
+        .select_related("categoria", "negocio")
+        .order_by("nome_servico")
+    )
+    return render(
+        request,
+        "servicos.html",
+        {
+            "servicos": aplicar_margem(servicos, "custo_operacional", "valor_servico"),
+            "categorias": categorias_ordenadas(),
+            "negocios": negocios_do_usuario(usuario),
+        },
+    )
+
+
+@atlas_login_required
+def precificacoes_view(request):
+    usuario = request.atlas_usuario
+
+    if request.method == "POST":
+        produto_id = request.POST.get("produto") or None
+        servico_id = request.POST.get("servico") or None
+        produto = None
+        servico = None
+
+        if produto_id:
+            produto = get_object_or_404(Produto, pk=produto_id, negocio__usuario=usuario)
+        if servico_id:
+            servico = get_object_or_404(Servico, pk=servico_id, negocio__usuario=usuario)
+
+        custo = decimal_from_post(request.POST.get("custo_total"))
+        margem = decimal_from_post(request.POST.get("margem_lucro"))
+        impostos = decimal_from_post(request.POST.get("impostos"))
+        preco_final = calcular_preco_final(custo, margem, impostos)
+
+        if not produto and not servico:
+            messages.error(request, "Selecione um produto ou servico para salvar a precificacao.")
+        elif preco_final is None:
+            messages.error(request, "Informe custo maior que zero e percentuais abaixo de 100%.")
+        else:
+            Precificacao.objects.create(
+                custo_total=custo,
+                margem_lucro=margem,
+                impostos=impostos,
+                preco_final=preco_final,
+                produto=produto,
+                servico=servico,
+            )
+            messages.success(request, "Precificacao salva com sucesso.")
+            return redirect("precificacoes")
+
+    precificacoes = (
+        Precificacao.objects.filter(
+            Q(produto__negocio__usuario=usuario) | Q(servico__negocio__usuario=usuario)
+        )
+        .select_related("produto", "servico")
+        .distinct()
+        .order_by("-id")
+    )
+    return render(
+        request,
+        "precificacoes.html",
+        {
+            "precificacoes": precificacoes,
+            "produtos": Produto.objects.filter(negocio__usuario=usuario).order_by("nome"),
+            "servicos": Servico.objects.filter(negocio__usuario=usuario).order_by("nome_servico"),
+        },
+    )
+
+
+@atlas_login_required
+def metas_view(request):
+    usuario = request.atlas_usuario
+
+    if request.method == "POST":
+        negocio = get_object_or_404(Negocio, pk=request.POST.get("negocio"), usuario=usuario)
+        MetaFinanceira.objects.create(
+            descricao_meta=request.POST.get("descricao_meta", "").strip(),
+            valor_meta=decimal_from_post(request.POST.get("valor_meta")),
+            prazo=date_from_post(request.POST.get("prazo")),
+            negocio=negocio,
+        )
+        messages.success(request, "Meta cadastrada com sucesso.")
+        return redirect("metas")
+
+    negocios = negocios_do_usuario(usuario).annotate(total_receitas=Sum("receita__valor"))
+    metas = MetaFinanceira.objects.filter(negocio__usuario=usuario).select_related("negocio")
+    return render(request, "Metas.html", {"metas": metas.order_by("prazo"), "negocios": negocios})
+
+
+@atlas_login_required
 def alertas_view(request):
-    if 'usuario_id' not in request.session:
-        return redirect('login')
-    return render(request, 'alertas.html')
+    usuario = request.atlas_usuario
+
+    if request.method == "POST":
+        negocio = get_object_or_404(Negocio, pk=request.POST.get("negocio"), usuario=usuario)
+        Alerta.objects.create(
+            mensagem=request.POST.get("mensagem", "").strip(),
+            data_alerta=date_from_post(request.POST.get("data_alerta")),
+            prioridade=request.POST.get("prioridade", "Baixa"),
+            negocio=negocio,
+        )
+        messages.success(request, "Alerta cadastrado com sucesso.")
+        return redirect("alertas")
+
+    alertas = Alerta.objects.filter(negocio__usuario=usuario).select_related("negocio")
+    return render(
+        request,
+        "alertas.html",
+        {
+            "alertas": alertas.order_by("-data_alerta", "-id"),
+            "negocios": negocios_do_usuario(usuario),
+        },
+    )
 
 
+@atlas_login_required
 def fechamentos_view(request):
-    if 'usuario_id' not in request.session:
-        return redirect('login')
-    return render(request, 'fechamentosMensais.html')
+    return render(
+        request,
+        "fechamentosMensais.html",
+        {"fechamentos": calcular_fechamentos(request.atlas_usuario)},
+    )
 
 
+@atlas_login_required
 def indicadores_view(request):
-    if 'usuario_id' not in request.session:
-        return redirect('login')
-    return render(request, 'IndicadoresFinanceiros.html')
+    return render(
+        request,
+        "IndicadoresFinanceiros.html",
+        {"indicadores": calcular_indicadores(request.atlas_usuario)},
+    )
 
 
+@atlas_login_required
 def notificacoes_view(request):
-    if 'usuario_id' not in request.session:
-        return redirect('login')
-    return render(request, 'notificacoes.html')
+    usuario = request.atlas_usuario
+
+    if request.method == "POST":
+        Notificacao.objects.create(
+            mensagem_notificacao=request.POST.get("mensagem_notificacao", "").strip(),
+            tipo=request.POST.get("tipo", "Informacao"),
+            status_notificacao=request.POST.get("status_notificacao", "Nao lida"),
+            usuario=usuario,
+        )
+        messages.success(request, "Notificacao cadastrada com sucesso.")
+        return redirect("notificacoes")
+
+    notificacoes = Notificacao.objects.filter(usuario=usuario).order_by("-id")
+    return render(request, "notificacoes.html", {"notificacoes": notificacoes})
 
 
+@atlas_login_required
 def relatorios_view(request):
-    if 'usuario_id' not in request.session:
-        return redirect('login')
-    return render(request, 'relatorios.html')
+    usuario = request.atlas_usuario
+
+    if request.method == "POST":
+        negocio = get_object_or_404(Negocio, pk=request.POST.get("negocio"), usuario=usuario)
+        Relatorio.objects.create(
+            tipo_relatorio=request.POST.get("tipo_relatorio", "Financeiro"),
+            periodo=date_from_post(request.POST.get("periodo")),
+            data_geracao=timezone.localdate(),
+            negocio=negocio,
+        )
+        messages.success(request, "Relatorio registrado com sucesso.")
+        return redirect("relatorios")
+
+    relatorios = Relatorio.objects.filter(negocio__usuario=usuario).select_related("negocio")
+    return render(
+        request,
+        "relatorios.html",
+        {
+            "fechamentos": calcular_fechamentos(usuario),
+            "indicadores": calcular_indicadores(usuario),
+            "relatorios": relatorios.order_by("-data_geracao", "-id"),
+            "negocios": negocios_do_usuario(usuario),
+        },
+    )
 
 
+@atlas_login_required
 def usuarios_view(request):
-    if 'usuario_id' not in request.session:
-        return redirect('login')
-    return render(request, 'usuarios.html')
+    usuario = request.atlas_usuario
+
+    if request.method == "POST":
+        nome = request.POST.get("nome", "").strip()
+        email = request.POST.get("email", "").strip()
+        tipo_usuario = request.POST.get("tipo_usuario", "MEI")
+
+        if Usuario.objects.exclude(pk=usuario.pk).filter(email=email).exists():
+            messages.error(request, "Este e-mail ja esta sendo usado por outro usuario.")
+        else:
+            usuario.nome = nome
+            usuario.email = email
+            usuario.tipo_usuario = tipo_usuario
+            usuario.save(update_fields=["nome", "email", "tipo_usuario"])
+            request.session["usuario_nome"] = usuario.nome
+            messages.success(request, "Perfil atualizado com sucesso.")
+            return redirect("usuarios")
+
+    return render(request, "usuarios.html", {"usuario": usuario})
 
 
+@atlas_login_required
 def categoria_view(request):
-    if 'usuario_id' not in request.session:
-        return redirect('login')
-    
-    # Se o formulário enviar dados para salvar uma nova categoria
-    if request.method == 'POST':
-        nome_categoria = request.POST.get('nome_categoria')
-        if nome_categoria:
-            from .models import Categoria  # Garanta que o seu modelo chama Categoria
-            Categoria.objects.create(nome=nome_categoria)
-            return redirect('categorias')
+    if request.method == "POST":
+        nome_categoria = request.POST.get("nome_categoria", "").strip()
+        tipo = request.POST.get("tipo", "Geral")
 
-    # Busca as categorias para listar na tabela da página
-    from .models import Categoria
-    categorias = Categoria.objects.all()
-    return render(request, 'categoria.html', {'categorias': categorias})
+        if not nome_categoria:
+            messages.error(request, "Informe o nome da categoria.")
+        else:
+            Categoria.objects.get_or_create(nome_categoria=nome_categoria, tipo=tipo)
+            messages.success(request, "Categoria salva com sucesso.")
+            return redirect("categorias")
+
+    return render(request, "categoria.html", {"categorias": categorias_ordenadas()})

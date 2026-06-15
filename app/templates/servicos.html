@@ -1,26 +1,27 @@
 {% extends "base.html" %}
 
-{% block title %}ATLAS - Serviços{% endblock %}
+{% block title %}ATLAS - Servicos{% endblock %}
 
 {% block content %}
 <header class="page-header">
     <div>
-        <h1>Serviços</h1>
-        <p>Gerencie os serviços oferecidos por {{ negocio.nome_negocio }}.</p>
+        <h1>Servicos</h1>
+        <p>Gerencie os servicos oferecidos pelos seus negocios.</p>
     </div>
 </header>
 
 <section class="dashboard-layout">
     <div class="panel">
-        <h2>Serviços cadastrados</h2>
+        <h2>Servicos cadastrados</h2>
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
                         <th>Nome</th>
+                        <th>Negocio</th>
                         <th>Categoria</th>
-                        <th>Custo Operacional</th>
-                        <th>Valor do Serviço</th>
+                        <th>Custo operacional</th>
+                        <th>Valor do servico</th>
                         <th>Margem</th>
                     </tr>
                 </thead>
@@ -28,20 +29,15 @@
                     {% for servico in servicos %}
                         <tr>
                             <td>{{ servico.nome_servico }}</td>
+                            <td>{{ servico.negocio.nome_negocio }}</td>
                             <td>{{ servico.categoria.nome_categoria }}</td>
                             <td>R$ {{ servico.custo_operacional }}</td>
                             <td>R$ {{ servico.valor_servico }}</td>
-                            <td>
-                                {% if servico.custo_operacional > 0 %}
-                                    {{ margem|floatformat:2 }}%
-                                {% else %}
-                                    N/A
-                                {% endif %}
-                            </td>
+                            <td>{{ servico.margem_calculada|floatformat:2 }}%</td>
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="5" class="empty-state">Nenhum serviço cadastrado.</td>
+                            <td colspan="6" class="empty-state">Nenhum servico cadastrado.</td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -50,22 +46,32 @@
     </div>
 
     <div class="form-panel">
-        <h2>Novo serviço</h2>
+        <h2>Novo servico</h2>
         <form method="POST">
             {% csrf_token %}
-            
+
             <div class="form-group">
-                <label for="nome_servico">Nome do Serviço</label>
+                <label for="nome_servico">Nome do servico</label>
                 <input type="text" id="nome_servico" name="nome_servico" required class="form-control">
             </div>
 
             <div class="form-group">
-                <label for="custo_operacional">Custo Operacional (R$)</label>
+                <label for="negocio">Negocio</label>
+                <select id="negocio" name="negocio" required class="form-control">
+                    <option value="">Selecione um negocio</option>
+                    {% for neg in negocios %}
+                        <option value="{{ neg.id }}">{{ neg.nome_negocio }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="custo_operacional">Custo operacional (R$)</label>
                 <input type="number" id="custo_operacional" name="custo_operacional" step="0.01" min="0" required class="form-control">
             </div>
 
             <div class="form-group">
-                <label for="valor_servico">Valor do Serviço (R$)</label>
+                <label for="valor_servico">Valor do servico (R$)</label>
                 <input type="number" id="valor_servico" name="valor_servico" step="0.01" min="0" required class="form-control">
             </div>
 
@@ -79,7 +85,7 @@
                 </select>
             </div>
 
-            <button type="submit" class="btn">Adicionar Serviço</button>
+            <button type="submit" class="btn">Adicionar Servico</button>
         </form>
     </div>
 </section>

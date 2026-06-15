@@ -70,11 +70,13 @@ urlpatterns = [
     # INDICADORES
     # ==========================
     path('indicadores/', views.indicadores_view, name='indicadores'),
+    path('indicadores-financeiros/', views.indicadores_view, name='indicadores_financeiros'),
 
     # ==========================
     # FECHAMENTO MENSAL
     # ==========================
     path('fechamentos/', views.fechamentos_view, name='fechamentos'),
+    path('fechamentos-mensais/', views.fechamentos_view, name='fechamentos_mensais'),
 
     # ==========================
     # NOTIFICAÇÕES

@@ -1,24 +1,66 @@
-{% extends 'base.html' %}
-{% load static %}
+{% extends "base.html" %}
+
+{% block title %}ATLAS - Indicadores Financeiros{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="header-container">
-        <h1>Indicadores Financeiros de Desempenho</h1>
-        <p class="text-muted">Métricas avançadas para tomada de decisões estratégicas.</p>
+<header class="page-header">
+    <div>
+        <h1>Indicadores Financeiros</h1>
+        <p>Metricas para apoiar decisoes de preco, custo e fluxo de caixa.</p>
     </div>
+</header>
 
-    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
-        <div class="card">
-            <h4>Ticket Médio por Venda</h4>
-            <h2 style="color: #c5a880;">R$ 185,00</h2>
-            <p style="color: #555; font-size: 12px;">Valor médio gasto por cliente em cada pedido.</p>
-        </div>
-        <div class="card">
-            <h4>Ponto de Equilíbrio (Break-even)</h4>
-            <h2 style="color: #dc3545;">R$ 4.800,00 /mês</h2>
-            <p style="color: #555; font-size: 12px;">Mínimo necessário faturar para cobrir custos operacionais.</p>
-        </div>
+<section class="reports-grid">
+    {% for indicador in indicadores %}
+        <article class="metric-card">
+            <div class="card-icon"><i class="fa-solid fa-chart-line"></i></div>
+            <div>
+                <span class="label">{{ indicador.negocio.nome_negocio }}</span>
+                <strong class="value">{{ indicador.margem_lucro|floatformat:2 }}%</strong>
+                <p class="muted">Margem sobre receitas</p>
+            </div>
+        </article>
+    {% empty %}
+        <article class="panel">
+            <h2>Nenhum indicador disponivel</h2>
+            <p class="muted">Cadastre receitas, despesas, produtos ou servicos para calcular indicadores.</p>
+        </article>
+    {% endfor %}
+</section>
+
+<section class="panel" style="margin-top: 16px;">
+    <h2>Detalhamento por negocio</h2>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Negocio</th>
+                    <th>Receitas</th>
+                    <th>Despesas</th>
+                    <th>Custos cadastrados</th>
+                    <th>Lucro</th>
+                    <th>Ponto de equilibrio</th>
+                    <th>Ticket medio</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for indicador in indicadores %}
+                    <tr>
+                        <td>{{ indicador.negocio.nome_negocio }}</td>
+                        <td>R$ {{ indicador.receitas }}</td>
+                        <td>R$ {{ indicador.despesas }}</td>
+                        <td>R$ {{ indicador.custos }}</td>
+                        <td>R$ {{ indicador.lucro }}</td>
+                        <td>R$ {{ indicador.ponto_equilibrio }}</td>
+                        <td>R$ {{ indicador.ticket_medio }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" class="empty-state">Nenhum indicador calculado.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
-</div>
+</section>
 {% endblock %}

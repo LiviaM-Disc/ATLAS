@@ -1,19 +1,19 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}ATLAS - Precificação{% endblock %}
+{% block title %}ATLAS - Precificacao{% endblock %}
 
 {% block content %}
 <header class="page-header">
     <div>
-        <h1>Precificação</h1>
-        <p>Calcule preços sugeridos e acompanhe precificações cadastradas.</p>
+        <h1>Precificacao</h1>
+        <p>Calcule precos sugeridos e salve precificacoes para produtos ou servicos.</p>
     </div>
 </header>
 
 <section class="dashboard-layout">
     <div class="form-panel">
-        <h2>Calculadora rápida</h2>
+        <h2>Calculadora rapida</h2>
 
         <div id="calc-preco">
             <div class="form-group">
@@ -32,19 +32,54 @@
             </div>
 
             <div class="calculator-result">
-                <span class="label">Preço sugerido</span>
+                <span class="label">Preco sugerido</span>
                 <strong class="value" id="preco-final">R$ 0,00</strong>
             </div>
         </div>
     </div>
 
-    <div class="panel">
-        <h2>Como o cálculo é feito</h2>
-        <p class="muted">
-            O preço sugerido é calculado com base no <strong>Markup Divisor</strong>. <br>
-            Isso garante que a margem de lucro e os impostos incidam corretamente sobre o <strong>Preço de Venda Final</strong>, protegendo sua rentabilidade.
-        </p>
-        <small>Nota: A fórmula utilizada impede que os impostos consumam a sua margem de lucro real.</small>
+    <div class="form-panel">
+        <h2>Salvar precificacao</h2>
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="produto">Produto</label>
+                <select id="produto" name="produto" class="form-control">
+                    <option value="">Sem produto</option>
+                    {% for produto in produtos %}
+                        <option value="{{ produto.id }}">{{ produto.nome }} - {{ produto.negocio.nome_negocio }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="servico">Servico</label>
+                <select id="servico" name="servico" class="form-control">
+                    <option value="">Sem servico</option>
+                    {% for servico in servicos %}
+                        <option value="{{ servico.id }}">{{ servico.nome_servico }} - {{ servico.negocio.nome_negocio }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="custo_total">Custo total (R$)</label>
+                <input type="number" id="custo_total" name="custo_total" step="0.01" min="0" required class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="margem_lucro">Margem desejada (%)</label>
+                <input type="number" id="margem_lucro" name="margem_lucro" step="0.01" min="0" required class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="impostos_form">Impostos e taxas (%)</label>
+                <input type="number" id="impostos_form" name="impostos" step="0.01" min="0" required class="form-control">
+            </div>
+
+            <button type="submit" class="btn">Salvar Precificacao</button>
+        </form>
     </div>
 </section>
 
@@ -53,19 +88,19 @@
         <thead>
             <tr>
                 <th>Produto</th>
-                <th>Serviço</th>
+                <th>Servico</th>
                 <th>Custo</th>
                 <th>Margem</th>
                 <th>Impostos</th>
-                <th>Preço final</th>
+                <th>Preco final</th>
             </tr>
         </thead>
 
         <tbody>
             {% for item in precificacoes %}
                 <tr>
-                    <td>{{ item.produto.nome }}</td>
-                    <td>{{ item.servico.nome_servico }}</td>
+                    <td>{{ item.produto.nome|default:"-" }}</td>
+                    <td>{{ item.servico.nome_servico|default:"-" }}</td>
                     <td>R$ {{ item.custo_total }}</td>
                     <td>{{ item.margem_lucro }}%</td>
                     <td>{{ item.impostos }}%</td>
@@ -74,7 +109,7 @@
             {% empty %}
                 <tr>
                     <td colspan="6" class="empty-state">
-                        Nenhuma precificação cadastrada no sistema.
+                        Nenhuma precificacao cadastrada no sistema.
                     </td>
                 </tr>
             {% endfor %}

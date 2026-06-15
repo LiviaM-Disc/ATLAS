@@ -6,7 +6,7 @@
 <header class="page-header">
     <div>
         <h1>Produtos</h1>
-        <p>Gerencie os produtos de {{ negocio.nome_negocio }}.</p>
+        <p>Gerencie os produtos cadastrados nos seus negocios.</p>
     </div>
 </header>
 
@@ -18,9 +18,10 @@
                 <thead>
                     <tr>
                         <th>Nome</th>
+                        <th>Negocio</th>
                         <th>Categoria</th>
                         <th>Custo</th>
-                        <th>Preço de Venda</th>
+                        <th>Preco de venda</th>
                         <th>Estoque</th>
                         <th>Margem</th>
                     </tr>
@@ -29,21 +30,16 @@
                     {% for produto in produtos %}
                         <tr>
                             <td>{{ produto.nome }}</td>
+                            <td>{{ produto.negocio.nome_negocio }}</td>
                             <td>{{ produto.categoria.nome_categoria }}</td>
                             <td>R$ {{ produto.custo }}</td>
                             <td>R$ {{ produto.preco_venda }}</td>
                             <td>{{ produto.estoque }}</td>
-                            <td>
-                                {% if produto.custo > 0 %}
-                                    {% widthratio produto.preco_venda produto.custo 100 %}%
-                                {% else %}
-                                    N/A
-                                {% endif %}
-                            </td>
+                            <td>{{ produto.margem_calculada|floatformat:2 }}%</td>
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="6" class="empty-state">Nenhum produto cadastrado.</td>
+                            <td colspan="7" class="empty-state">Nenhum produto cadastrado.</td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -55,10 +51,20 @@
         <h2>Novo produto</h2>
         <form method="POST">
             {% csrf_token %}
-            
+
             <div class="form-group">
-                <label for="nome_produto">Nome do Produto</label>
+                <label for="nome_produto">Nome do produto</label>
                 <input type="text" id="nome_produto" name="nome_produto" required class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="negocio">Negocio</label>
+                <select id="negocio" name="negocio" required class="form-control">
+                    <option value="">Selecione um negocio</option>
+                    {% for neg in negocios %}
+                        <option value="{{ neg.id }}">{{ neg.nome_negocio }}</option>
+                    {% endfor %}
+                </select>
             </div>
 
             <div class="form-group">
@@ -67,7 +73,7 @@
             </div>
 
             <div class="form-group">
-                <label for="preco_venda">Preço de Venda (R$)</label>
+                <label for="preco_venda">Preco de venda (R$)</label>
                 <input type="number" id="preco_venda" name="preco_venda" step="0.01" min="0" required class="form-control">
             </div>
 
