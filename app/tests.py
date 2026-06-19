@@ -51,13 +51,37 @@ class AtlasFlowTests(TestCase):
         self.assertRedirects(response, reverse("index"))
 
     def test_django_superuser_can_login_by_username(self):
-        User.objects.create_superuser(username="admin", password="123456")
+        auth_user = User.objects.create_superuser(username="admin", password="123456")
         response = self.client.post(
             reverse("login"),
             {"email": "admin", "senha": "123456"},
         )
         self.assertRedirects(response, reverse("index"))
+        self.assertEqual(self.client.session.get("_auth_user_id"), str(auth_user.pk))
         self.assertTrue(Usuario.objects.filter(nome="admin", tipo_usuario="Administrador").exists())
+
+    def test_django_superuser_can_login_by_email_and_access_admin(self):
+        auth_user = User.objects.create_superuser(
+            username="admin",
+            email="admin@atlas.local",
+            password="123456",
+        )
+        response = self.client.post(
+            reverse("login"),
+            {"email": "admin@atlas.local", "senha": "123456"},
+        )
+        self.assertRedirects(response, reverse("index"))
+        self.assertEqual(self.client.session.get("_auth_user_id"), str(auth_user.pk))
+        self.assertTrue(
+            Usuario.objects.filter(
+                nome="admin",
+                email="admin@atlas.local",
+                tipo_usuario="Administrador",
+            ).exists()
+        )
+
+        response = self.client.get(reverse("admin:index"))
+        self.assertEqual(response.status_code, 200)
 
     def test_authenticated_pages_render(self):
         self.autenticar()

@@ -5,7 +5,9 @@ from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from functools import wraps
 
 from django.contrib import messages
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth import login as django_login
+from django.contrib.auth import logout as django_logout
 from django.contrib.auth.hashers import check_password, make_password
 from django.db.models import Q, Sum
 from django.db.models.functions import TruncMonth
@@ -66,6 +68,38 @@ def get_usuario_logado(request):
     if not usuario_id:
         return None
     return Usuario.objects.filter(pk=usuario_id).first()
+
+
+def iniciar_sessao_atlas(request, usuario):
+    request.session["usuario_id"] = usuario.id
+    request.session["usuario_nome"] = usuario.nome
+
+
+def autenticar_usuario_django(request, identificador, senha):
+    auth_user = authenticate(request, username=identificador, password=senha)
+    if auth_user:
+        return auth_user
+
+    user_model = get_user_model()
+    for user in user_model._default_manager.filter(email__iexact=identificador):
+        auth_user = authenticate(request, username=user.get_username(), password=senha)
+        if auth_user:
+            return auth_user
+
+    return None
+
+
+def sincronizar_usuario_atlas(auth_user, senha):
+    email = auth_user.email or f"{auth_user.get_username()}@atlas.local"
+    usuario, _ = Usuario.objects.update_or_create(
+        email=email,
+        defaults={
+            "nome": auth_user.get_full_name() or auth_user.get_username(),
+            "senha": make_password(senha),
+            "tipo_usuario": "Administrador" if auth_user.is_staff or auth_user.is_superuser else "MEI",
+        },
+    )
+    return usuario
 
 
 def atlas_login_required(view_func):
@@ -195,26 +229,17 @@ def login_view(request):
     if request.method == "POST":
         identificador = request.POST.get("email", "").strip()
         senha_post = request.POST.get("senha", "")
-        usuario = Usuario.objects.filter(Q(email=identificador) | Q(nome=identificador)).first()
 
-        if usuario and check_password(senha_post, usuario.senha):
-            request.session["usuario_id"] = usuario.id
-            request.session["usuario_nome"] = usuario.nome
+        auth_user = autenticar_usuario_django(request, identificador, senha_post)
+        if auth_user:
+            usuario = sincronizar_usuario_atlas(auth_user, senha_post)
+            django_login(request, auth_user)
+            iniciar_sessao_atlas(request, usuario)
             return redirect("index")
 
-        auth_user = authenticate(request, username=identificador, password=senha_post)
-        if auth_user:
-            email = auth_user.email or f"{auth_user.username}@atlas.local"
-            usuario, _ = Usuario.objects.update_or_create(
-                email=email,
-                defaults={
-                    "nome": auth_user.get_full_name() or auth_user.username,
-                    "senha": make_password(senha_post),
-                    "tipo_usuario": "Administrador" if auth_user.is_staff else "MEI",
-                },
-            )
-            request.session["usuario_id"] = usuario.id
-            request.session["usuario_nome"] = usuario.nome
+        usuario = Usuario.objects.filter(Q(email=identificador) | Q(nome=identificador)).first()
+        if usuario and check_password(senha_post, usuario.senha):
+            iniciar_sessao_atlas(request, usuario)
             return redirect("index")
 
         messages.error(request, "Usuario/e-mail ou senha invalidos.")
@@ -238,8 +263,7 @@ def cadastro_view(request):
                 email=email,
                 senha=make_password(senha),
             )
-            request.session["usuario_id"] = novo_usuario.id
-            request.session["usuario_nome"] = novo_usuario.nome
+            iniciar_sessao_atlas(request, novo_usuario)
             messages.success(request, "Cadastro realizado. Agora configure seu negocio.")
             return redirect("cadastrar_negocio")
 
@@ -273,7 +297,7 @@ def cadastrar_negocio_view(request):
 
 
 def logout_view(request):
-    request.session.flush()
+    django_logout(request)
     return redirect("login")
 
 
