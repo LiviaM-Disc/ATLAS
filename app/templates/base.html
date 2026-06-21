@@ -41,8 +41,16 @@
                 <a class="{% if request.resolver_match.url_name == 'metas' %}active{% endif %}" href="{% url 'metas' %}">
                     <i class="fa-solid fa-bullseye"></i> Metas
                 </a>
-                <a class="{% if request.resolver_match.url_name == 'alertas' %}active{% endif %}" href="{% url 'alertas' %}">
-                    <i class="fa-solid fa-triangle-exclamation"></i> Alertas
+                <a class="{% if request.resolver_match.url_name == 'alertas' %}active{% endif %}"
+                        href="{% url 'alertas' %}">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <span>Alertas</span>
+
+                            {% if alertas_nao_lidos > 0 %}
+                                <span class="notification-badge">
+                                    {{ alertas_nao_lidos }}
+                                </span>
+                            {% endif %}
                 </a>
                 <a class="{% if request.resolver_match.url_name == 'relatorios' %}active{% endif %}" href="{% url 'relatorios' %}">
                     <i class="fa-solid fa-chart-pie"></i> Relatórios
@@ -56,8 +64,25 @@
                 <a class="{% if request.resolver_match.url_name == 'indicadores' %}active{% endif %}" href="{% url 'indicadores' %}">
                     <i class="fa-solid fa-chart-line"></i> Indicadores
                 </a>
-                <a class="{% if request.resolver_match.url_name == 'notificacoes' %}active{% endif %}" href="{% url 'notificacoes' %}">
-                    <i class="fa-solid fa-bell"></i> Notificações
+                <a
+                    class="{% if request.resolver_match.url_name == 'notificacoes' %}active{% endif %}"
+                    href="{% url 'notificacoes' %}">
+                    <i class="fa-solid fa-bell"></i>
+
+                    <span>Notificações</span>
+
+                    {% if notificacoes_nao_lidas > 0 %}
+                        <span
+                            class="notification-badge"
+                            title="{{ notificacoes_nao_lidas }} notificação(ões) não lida(s)"
+                        >
+                            {% if notificacoes_nao_lidas > 99 %}
+                                99+
+                            {% else %}
+                                {{ notificacoes_nao_lidas }}
+                            {% endif %}
+                        </span>
+                    {% endif %}
                 </a>
                 <a class="{% if request.resolver_match.url_name == 'usuarios' %}active{% endif %}" href="{% url 'usuarios' %}">
                     <i class="fa-solid fa-user"></i> Perfil

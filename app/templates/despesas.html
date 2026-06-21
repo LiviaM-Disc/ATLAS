@@ -13,6 +13,7 @@
 <section class="dashboard-layout">
     <div class="panel">
         <h2>Histórico de despesas</h2>
+
         <div class="table-container">
             <table>
                 <thead>
@@ -20,10 +21,13 @@
                         <th>Descrição</th>
                         <th>Negócio</th>
                         <th>Data</th>
+                        <th>Vencimento</th>
                         <th>Status</th>
                         <th>Valor</th>
+                        <th>Ação</th>
                     </tr>
                 </thead>
+
                 <tbody>
                     {% for despesa in despesas %}
                         <tr>
@@ -31,15 +35,58 @@
                             <td>{{ despesa.negocio.nome_negocio }}</td>
                             <td>{{ despesa.data_despesa|date:"d/m/Y" }}</td>
                             <td>
-                                <span class="status-badge {% if despesa.status == 'Paga' %}paga{% elif despesa.status == 'Pendente' %}pendente{% else %}cancelada{% endif %}">
+                                {% if despesa.data_vencimento %}
+                                    {{ despesa.data_vencimento|date:"d/m/Y" }}
+                                {% else %}
+                                    Não informado
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="status-badge
+                                    {% if despesa.status == 'Paga' %}
+                                        paga
+                                    {% elif despesa.status == 'Pendente' %}
+                                        pendente
+                                    {% else %}
+                                        cancelada
+                                    {% endif %}
+                                ">
                                     {{ despesa.status }}
                                 </span>
                             </td>
                             <td>R$ {{ despesa.valor_despesa }}</td>
+                            <td>
+                                {% if despesa.status == "Pendente" %}
+                                    <form
+                                        method="POST"
+                                        action="{% url 'marcar_despesa_paga' despesa.id %}"
+                                        class="payment-form"
+                                    >
+                                        {% csrf_token %}
+                                        <button
+                                            type="submit"
+                                            class="btn-paid"
+                                            onclick="return confirm('Confirmar o pagamento desta despesa?');"
+                                        >
+                                            <i class="fa-solid fa-check"></i>
+                                            Marcar como paga
+                                        </button>
+                                    </form>
+                                {% elif despesa.status == "Paga" %}
+                                    <span class="paid-label">
+                                        <i class="fa-solid fa-circle-check"></i>
+                                        Paga
+                                    </span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="5" class="empty-state">Nenhuma despesa cadastrada.</td>
+                            <td colspan="7" class="empty-state">
+                                Nenhuma despesa cadastrada.
+                            </td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -49,22 +96,54 @@
 
     <div class="form-panel">
         <h2>Nova despesa</h2>
+
         <form method="POST">
             {% csrf_token %}
-            
+
             <div class="form-group">
                 <label for="descricao_despesa">Descrição</label>
-                <input type="text" id="descricao_despesa" name="descricao_despesa" required class="form-control">
+                <input
+                    type="text"
+                    id="descricao_despesa"
+                    name="descricao_despesa"
+                    required
+                    class="form-control"
+                >
             </div>
 
             <div class="form-group">
                 <label for="valor_despesa">Valor (R$)</label>
-                <input type="number" id="valor_despesa" name="valor_despesa" step="0.01" min="0" required class="form-control">
+                <input
+                    type="number"
+                    id="valor_despesa"
+                    name="valor_despesa"
+                    step="0.01"
+                    min="0.01"
+                    required
+                    class="form-control"
+                >
             </div>
 
             <div class="form-group">
                 <label for="data_despesa">Data</label>
-                <input type="date" id="data_despesa" name="data_despesa" class="form-control">
+                <input
+                    type="date"
+                    id="data_despesa"
+                    name="data_despesa"
+                    required
+                    class="form-control"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="data_vencimento">Data de vencimento</label>
+                <input
+                    type="date"
+                    id="data_vencimento"
+                    name="data_vencimento"
+                    required
+                    class="form-control"
+                >
             </div>
 
             <div class="form-group">
@@ -78,25 +157,43 @@
 
             <div class="form-group">
                 <label for="categoria">Categoria</label>
-                <select id="categoria" name="categoria" required class="form-control">
+                <select
+                    id="categoria"
+                    name="categoria"
+                    required
+                    class="form-control"
+                >
                     <option value="">Selecione uma categoria</option>
+
                     {% for cat in categorias %}
-                        <option value="{{ cat.id }}">{{ cat.nome_categoria }}</option>
+                        <option value="{{ cat.id }}">
+                            {{ cat.nome_categoria }}
+                        </option>
                     {% endfor %}
                 </select>
             </div>
 
             <div class="form-group">
                 <label for="negocio">Negócio</label>
-                <select id="negocio" name="negocio" required class="form-control">
+                <select
+                    id="negocio"
+                    name="negocio"
+                    required
+                    class="form-control"
+                >
                     <option value="">Selecione um negócio</option>
+
                     {% for neg in negocios %}
-                        <option value="{{ neg.id }}">{{ neg.nome_negocio }}</option>
+                        <option value="{{ neg.id }}">
+                            {{ neg.nome_negocio }}
+                        </option>
                     {% endfor %}
                 </select>
             </div>
 
-            <button type="submit" class="btn">Adicionar Despesa</button>
+            <button type="submit" class="btn">
+                Adicionar despesa
+            </button>
         </form>
     </div>
 </section>

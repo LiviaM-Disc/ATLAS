@@ -1,6 +1,5 @@
 from django.db import models
-
-from django.db import models
+from django.utils import timezone
 
 class Usuario(models.Model):
     nome = models.CharField(max_length=100)
@@ -54,21 +53,47 @@ class Receita (models.Model):
         verbose_name="Receita"
         verbose_name_plural="Receitas"
 
-class Despesa (models.Model):
-    valor_despesa=models.DecimalField(max_digits=10,decimal_places=2,verbose_name="Valor")
-    data_despesa=models.DateField(verbose_name="Data")
-    descricao_despesa=models.CharField(max_length=150,verbose_name="Descrição da Despesa")
-    status=models.CharField(max_length=100,verbose_name= "Status")
+class Despesa(models.Model):
+    valor_despesa = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name="Valor",
+    )
+    data_despesa = models.DateField(verbose_name="Data")
+    data_vencimento = models.DateField(
+        verbose_name="Data de vencimento",
+        null=True,
+        blank=True,
+    )
+    descricao_despesa = models.CharField(
+        max_length=150,
+        verbose_name="Descrição da despesa",
+    )
+    status = models.CharField(
+        max_length=100,
+        verbose_name="Status",
+        default="Pendente",
+    )
+    aviso_antecipado_enviado = models.BooleanField(default=False)
+    aviso_vencimento_enviado = models.BooleanField(default=False)
 
-    categoria=models.ForeignKey(Categoria,on_delete=models.CASCADE, verbose_name="Categoria")
-    negocio=models.ForeignKey(Negocio, on_delete=models.CASCADE,verbose_name="Negócio")
+    categoria = models.ForeignKey(
+        Categoria,
+        on_delete=models.CASCADE,
+        verbose_name="Categoria",
+    )
+    negocio = models.ForeignKey(
+        Negocio,
+        on_delete=models.CASCADE,
+        verbose_name="Negócio",
+    )
 
     def __str__(self):
-        return f"{self.valor_despesa},{self.data_despesa},{self.descricao_despesa},{self.status}"
-    class Meta:
-        verbose_name="Despesa"
-        verbose_name_plural="Despesas"
+        return self.descricao_despesa
 
+    class Meta:
+        verbose_name = "Despesa"
+        verbose_name_plural = "Despesas"
 
 class Produto (models.Model):
     nome=models.CharField(max_length=100,verbose_name="Nome")
@@ -141,18 +166,34 @@ class MetaFinanceira  (models.Model):
         verbose_name="Meta"
         verbose_name_plural="Metas"
 
-class Alerta (models.Model):
-    mensagem=models.CharField(max_length=100,verbose_name="Mensagem")
-    data_alerta=models.DateField(verbose_name="Data")
-    prioridade=models.CharField(max_length=150,verbose_name="Prioridade")
-    
-    negocio=models.ForeignKey(Negocio, on_delete=models.CASCADE,verbose_name="Negócio")
+class Alerta(models.Model):
+    mensagem = models.CharField(max_length=255, verbose_name="Mensagem")
+    data_alerta = models.DateField(verbose_name="Data")
+    prioridade = models.CharField(max_length=30, default="Alta")
+    tipo = models.CharField(max_length=100, default="Manual")
+    status_alerta = models.CharField(max_length=30, default="Não lido")
+    automatico = models.BooleanField(default=False)
+    periodo_referencia = models.DateField(null=True, blank=True)
+    data_criacao = models.DateTimeField(default=timezone.now, editable=False)
+
+    negocio = models.ForeignKey(
+        Negocio,
+        on_delete=models.CASCADE,
+        verbose_name="Negócio",
+    )
 
     def __str__(self):
-        return f"{self.mensagem},{self.data_alerta},{self.prioridade}"
+        return self.mensagem
+
     class Meta:
-        verbose_name="Alerta"
-        verbose_name_plural="Alertas"
+        verbose_name = "Alerta"
+        verbose_name_plural = "Alertas"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["negocio", "tipo", "periodo_referencia"],
+                name="alerta_financeiro_unico_por_periodo",
+            )
+        ]
 
 class FechamentoMensal (models.Model):
     receita_total=models.DecimalField(max_digits=10,decimal_places=2,verbose_name="Valor total da Receita")
@@ -169,19 +210,48 @@ class FechamentoMensal (models.Model):
         verbose_name="Fechamento Mensal"
         verbose_name_plural="Fechamentos Mensais"
 
-class Notificacao (models.Model):
-    mensagem_notificacao=models.CharField(max_length=100,verbose_name="Notificação")
-    tipo=models.CharField(max_length=100,verbose_name="Tipo")
-    status_notificacao=models.CharField(max_length=150,verbose_name="Status")
+class Notificacao(models.Model):
+    mensagem_notificacao = models.CharField(
+        max_length=255,
+        verbose_name="Notificação",
+    )
+    tipo = models.CharField(max_length=100, verbose_name="Tipo")
+    status_notificacao = models.CharField(
+        max_length=150,
+        verbose_name="Status",
+        default="Não lida",
+    )
+    data_criacao = models.DateTimeField(
+        default=timezone.now,
+        editable=False,
+    )
 
-    usuario=models.ForeignKey(Usuario,on_delete=models.CASCADE, verbose_name="Usuário")
-    
+    usuario = models.ForeignKey(
+        Usuario,
+        on_delete=models.CASCADE,
+        verbose_name="Usuário",
+    )
+    despesa = models.ForeignKey(
+        Despesa,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="notificacoes",
+        verbose_name="Despesa relacionada",
+    )
 
     def __str__(self):
-        return f"{self.mensagem_notificacao},{self.tipo},{self.status_notificacao}"
+        return self.mensagem_notificacao
+
     class Meta:
-        verbose_name="Notificação"
-        verbose_name_plural="Notificações"
+        verbose_name = "Notificação"
+        verbose_name_plural = "Notificações"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["despesa", "tipo"],
+                name="notificacao_unica_por_despesa_e_tipo",
+            )
+        ]
 
 class IndicadorFinanceiro (models.Model):
     margem_lucro=models.DecimalField(max_digits=10,decimal_places=2,verbose_name="Margem de Lucro")

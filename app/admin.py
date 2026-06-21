@@ -40,12 +40,26 @@ class ReceitaAdmin(admin.ModelAdmin):
 
 @admin.register(Despesa)
 class DespesaAdmin(admin.ModelAdmin):
-    list_display = ('descricao_despesa', 'valor_despesa', 'data_despesa', 'status', 'categoria', 'negocio')
-    list_filter = ('data_despesa', 'status', 'categoria', 'negocio')
-    search_fields = ('descricao_despesa', 'negocio__nome_negocio')
-    ordering = ('-data_despesa',)
-    date_hierarchy = 'data_despesa'
-
+    list_display = (
+        "descricao_despesa",
+        "valor_despesa",
+        "data_despesa",
+        "data_vencimento",
+        "status",
+        "categoria",
+        "negocio",
+    )
+    list_filter = (
+        "data_vencimento",
+        "status",
+        "categoria",
+        "negocio",
+    )
+    search_fields = (
+        "descricao_despesa",
+        "negocio__nome_negocio",
+    )
+    ordering = ("data_vencimento",)
 
 @admin.register(Produto)
 class ProdutoAdmin(admin.ModelAdmin):
@@ -97,9 +111,34 @@ class FechamentoMensalAdmin(admin.ModelAdmin):
 
 @admin.register(Notificacao)
 class NotificacaoAdmin(admin.ModelAdmin):
-    list_display = ('mensagem_notificacao', 'tipo', 'status_notificacao', 'usuario')
-    list_filter = ('tipo', 'status_notificacao', 'usuario')
-    search_fields = ('mensagem_notificacao', 'usuario__nome')
+    list_display = (
+        "mensagem_notificacao",
+        "tipo",
+        "status_notificacao",
+        "usuario",
+        "despesa",
+        "data_criacao",
+    )
+    list_filter = (
+        "tipo",
+        "status_notificacao",
+        "usuario",
+    )
+    search_fields = (
+        "mensagem_notificacao",
+        "usuario__nome",
+        "despesa__descricao_despesa",
+    )
+    readonly_fields = (
+        "mensagem_notificacao",
+        "tipo",
+        "usuario",
+        "despesa",
+        "data_criacao",
+    )
+
+    def has_add_permission(self, request):
+        return False
 
 
 @admin.register(IndicadorFinanceiro)

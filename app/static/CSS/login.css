@@ -57,11 +57,13 @@ body {
     background: var(--accent);
 }
 
-.logo {
-    background-color: transparent;
-    margin-bottom: 36px;
-    max-width: 180px;
+
+img.logo {
+    width: 540 !important;
+    max-width: none !important;
+    height: auto !important;
 }
+ 
 
 .brand-panel h1 {
     font-size: 2.7rem;

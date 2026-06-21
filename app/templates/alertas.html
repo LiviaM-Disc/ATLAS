@@ -5,82 +5,68 @@
 {% block content %}
 <header class="page-header">
     <div>
-        <h1>Alertas</h1>
-        <p>Gerencie alertas e avisos dos seus negócios.</p>
+        <h1>Alertas financeiros</h1>
+        <p>Acompanhe situações financeiras que precisam de atenção.</p>
     </div>
 </header>
 
-<section class="dashboard-layout">
-    <div class="panel">
-        <h2>Alertas cadastrados</h2>
-        <div class="table-container">
-            <table>
-                <thead>
+<section class="panel">
+    <h2>Alertas recebidos</h2>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Mensagem</th>
+                    <th>Negócio</th>
+                    <th>Período</th>
+                    <th>Data</th>
+                    <th>Prioridade</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for alerta in alertas %}
                     <tr>
-                        <th>Mensagem</th>
-                        <th>Negócio</th>
-                        <th>Data</th>
-                        <th>Prioridade</th>
+                        <td>{{ alerta.mensagem }}</td>
+                        <td>{{ alerta.negocio.nome_negocio }}</td>
+                        <td>
+                            {% if alerta.periodo_referencia %}
+                                {{ alerta.periodo_referencia|date:"m/Y" }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>{{ alerta.data_alerta|date:"d/m/Y" }}</td>
+                        <td>
+                            <span class="status-badge alta">
+                                {{ alerta.prioridade }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="status-badge
+                                {% if alerta.status_alerta == 'Resolvido' %}
+                                    ok
+                                {% elif alerta.status_alerta == 'Lido' %}
+                                    neutro
+                                {% else %}
+                                    alerta
+                                {% endif %}
+                            ">
+                                {{ alerta.status_alerta }}
+                            </span>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    {% for alerta in alertas %}
-                        <tr>
-                            <td>{{ alerta.mensagem }}</td>
-                            <td>{{ alerta.negocio.nome_negocio }}</td>
-                            <td>{{ alerta.data_alerta|date:"d/m/Y" }}</td>
-                            <td>
-                                <span class="status-badge {% if alerta.prioridade == 'Alta' %}alta{% elif alerta.prioridade == 'Média' %}media{% else %}baixa{% endif %}">
-                                    {{ alerta.prioridade }}
-                                </span>
-                            </td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="4" class="empty-state">Nenhum alerta cadastrado.</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="form-panel">
-        <h2>Novo alerta</h2>
-        <form method="POST">
-            {% csrf_token %}
-            
-            <div class="form-group">
-                <label for="mensagem">Mensagem</label>
-                <textarea id="mensagem" name="mensagem" required class="form-control" rows="3"></textarea>
-            </div>
-
-            <div class="form-group">
-                <label for="data_alerta">Data</label>
-                <input type="date" id="data_alerta" name="data_alerta" class="form-control">
-            </div>
-
-            <div class="form-group">
-                <label for="prioridade">Prioridade</label>
-                <select id="prioridade" name="prioridade" class="form-control">
-                    <option value="Baixa">Baixa</option>
-                    <option value="Média">Média</option>
-                    <option value="Alta">Alta</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="negocio">Negócio</label>
-                <select id="negocio" name="negocio" required class="form-control">
-                    <option value="">Selecione um negócio</option>
-                    {% for neg in negocios %}
-                        <option value="{{ neg.id }}">{{ neg.nome_negocio }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <button type="submit" class="btn">Adicionar Alerta</button>
-        </form>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            Nenhum alerta financeiro.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </section>
 {% endblock %}

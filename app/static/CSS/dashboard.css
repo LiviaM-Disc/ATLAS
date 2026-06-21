@@ -475,3 +475,44 @@ textarea {
         margin-top: 14px;
     }
 }
+
+.notification-badge {
+    align-items: center;
+    background: var(--red);
+    border: 2px solid var(--bg-sidebar);
+    border-radius: 999px;
+    color: #ffffff;
+    display: inline-flex;
+    font-size: 0.72rem;
+    font-weight: 700;
+    height: 22px;
+    justify-content: center;
+    margin-left: auto;
+    min-width: 22px;
+    padding: 0 6px;
+}
+
+.payment-form {
+    display: inline;
+    margin: 0;
+}
+
+.btn-paid {
+    background: var(--teal);
+    color: #ffffff;
+    font-size: 0.82rem;
+    min-height: 34px;
+    padding: 7px 10px;
+    white-space: nowrap;
+}
+
+.btn-paid:hover {
+    background: #20bda2;
+}
+
+.paid-label {
+    color: #70dfcd;
+    font-size: 0.85rem;
+    font-weight: 700;
+    white-space: nowrap;
+}

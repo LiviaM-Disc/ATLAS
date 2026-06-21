@@ -129,6 +129,7 @@ class AtlasFlowTests(TestCase):
                 "status": "Paga",
                 "categoria": self.categoria.id,
                 "negocio": self.negocio.id,
+                "data_vencimento": "2026-06-03",
             },
         )
         self.client.post(
@@ -175,23 +176,7 @@ class AtlasFlowTests(TestCase):
                 "negocio": self.negocio.id,
             },
         )
-        self.client.post(
-            reverse("alertas"),
-            {
-                "mensagem": "Revisar fluxo de caixa",
-                "data_alerta": "2026-06-15",
-                "prioridade": "Alta",
-                "negocio": self.negocio.id,
-            },
-        )
-        self.client.post(
-            reverse("notificacoes"),
-            {
-                "mensagem_notificacao": "Bem-vinda ao ATLAS",
-                "tipo": "Informacao",
-                "status_notificacao": "Nao lida",
-            },
-        )
+        
         self.client.post(
             reverse("relatorios"),
             {
@@ -207,8 +192,6 @@ class AtlasFlowTests(TestCase):
         self.assertEqual(Servico.objects.count(), 1)
         self.assertEqual(Precificacao.objects.count(), 1)
         self.assertEqual(MetaFinanceira.objects.count(), 1)
-        self.assertEqual(Alerta.objects.count(), 1)
-        self.assertEqual(Notificacao.objects.count(), 1)
         self.assertEqual(Relatorio.objects.count(), 1)
         self.assertEqual(servico.nome_servico, "Servico teste")
 
