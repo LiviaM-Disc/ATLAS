@@ -116,10 +116,17 @@ a {
     border-radius: 8px;
     color: var(--accent-strong);
     display: inline-flex;
+    cursor: pointer;
+    font: inherit;
     gap: 8px;
     justify-content: center;
     padding: 10px;
     text-decoration: none;
+    width: 100%;
+}
+
+.logout-form {
+    margin: 0;
 }
 
 #content {

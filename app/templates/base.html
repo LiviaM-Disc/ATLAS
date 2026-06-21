@@ -94,7 +94,12 @@
                     <span>Usuário</span>
                     <strong>{{ request.session.usuario_nome|default:"ATLAS" }}</strong>
                 </div>
-                <a href="{% url 'logout' %}" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Sair</a>
+                <form method="post" action="{% url 'logout' %}" class="logout-form">
+                    {% csrf_token %}
+                    <button type="submit" class="logout-btn">
+                        <i class="fa-solid fa-right-from-bracket"></i> Sair
+                    </button>
+                </form>
             </div>
         </aside>
 

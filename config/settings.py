@@ -1,6 +1,17 @@
 from pathlib import Path
 import os
 
+from django.core.exceptions import ImproperlyConfigured
+
+
+def env_bool(name, default=False):
+    return os.environ.get(name, str(default)).lower() in (
+        '1',
+        'true',
+        'yes',
+        'on',
+    )
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get(
@@ -8,13 +19,35 @@ SECRET_KEY = os.environ.get(
     'django-insecure-8l8o(-2su$6t%k424293i#x672q0$*^itfyi9r32$8j-igo7zf',
 )
 
-DEBUG = os.environ.get('DEBUG', 'True').lower() in ('1', 'true', 'yes', 'on')
+DEBUG = env_bool('DEBUG', True)
 
 ALLOWED_HOSTS = [
     host.strip()
     for host in os.environ.get('ALLOWED_HOSTS', '').split(',')
     if host.strip()
 ]
+
+if not DEBUG and not os.environ.get('SECRET_KEY'):
+    raise ImproperlyConfigured(
+        'Defina SECRET_KEY no ambiente quando DEBUG=False.'
+    )
+
+if not DEBUG and not ALLOWED_HOSTS:
+    raise ImproperlyConfigured(
+        'Defina ALLOWED_HOSTS no ambiente quando DEBUG=False.'
+    )
+
+SECURE_SSL_REDIRECT = env_bool('SECURE_SSL_REDIRECT', not DEBUG)
+SESSION_COOKIE_SECURE = env_bool('SESSION_COOKIE_SECURE', not DEBUG)
+CSRF_COOKIE_SECURE = env_bool('CSRF_COOKIE_SECURE', not DEBUG)
+SECURE_HSTS_SECONDS = int(
+    os.environ.get('SECURE_HSTS_SECONDS', '31536000' if not DEBUG else '0')
+)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool(
+    'SECURE_HSTS_INCLUDE_SUBDOMAINS',
+    not DEBUG,
+)
+SECURE_HSTS_PRELOAD = env_bool('SECURE_HSTS_PRELOAD', not DEBUG)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -103,6 +136,7 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 APP_STATIC_DIR = BASE_DIR / 'app' / 'static'
 STATICFILES_DIRS = [APP_STATIC_DIR] if APP_STATIC_DIR.exists() else []

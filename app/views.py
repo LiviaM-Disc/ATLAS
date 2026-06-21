@@ -82,6 +82,7 @@ def get_usuario_logado(request):
 
 
 def iniciar_sessao_atlas(request, usuario):
+    request.session.cycle_key()
     request.session["usuario_id"] = usuario.id
     request.session["usuario_nome"] = usuario.nome
 
@@ -497,6 +498,7 @@ def cadastrar_negocio_view(request):
     return render(request, "negocio_form.html")
 
 
+@require_POST
 def logout_view(request):
     django_logout(request)
     return redirect("login")
@@ -1113,7 +1115,7 @@ def metas_view(request):
 
     return render(
         request,
-        "Metas.html",
+        "metas.html",
         {
             "metas": metas,
             "negocios": negocios,

@@ -1,4 +1,6 @@
 from django.contrib import admin
+
+from .forms import UsuarioForm
 from .models import (
     Usuario, Negocio, Categoria, Receita, Despesa, Produto, Servico,
     Precificacao, Relatorio, MetaFinanceira, Alerta, FechamentoMensal,
@@ -6,8 +8,107 @@ from .models import (
 )
 
 
+class NegocioInline(admin.TabularInline):
+    model = Negocio
+    extra = 0
+    fields = (
+        'nome_negocio',
+        'segmento',
+        'meta_mensal',
+        'capital_inicial',
+    )
+    show_change_link = True
+
+
+class ReceitaInline(admin.TabularInline):
+    model = Receita
+    extra = 0
+    fields = ('descricao', 'valor', 'data', 'forma_pagamento', 'categoria')
+    show_change_link = True
+    classes = ('collapse',)
+
+
+class DespesaInline(admin.TabularInline):
+    model = Despesa
+    extra = 0
+    fields = (
+        'descricao_despesa',
+        'valor_despesa',
+        'data_despesa',
+        'data_vencimento',
+        'status',
+        'categoria',
+    )
+    show_change_link = True
+    classes = ('collapse',)
+
+
+class ProdutoInline(admin.TabularInline):
+    model = Produto
+    extra = 0
+    fields = ('nome', 'custo', 'preco_venda', 'estoque', 'categoria')
+    show_change_link = True
+    classes = ('collapse',)
+
+
+class ServicoInline(admin.TabularInline):
+    model = Servico
+    extra = 0
+    fields = (
+        'nome_servico',
+        'custo_operacional',
+        'valor_servico',
+        'categoria',
+    )
+    show_change_link = True
+    classes = ('collapse',)
+
+
+class MetaFinanceiraInline(admin.TabularInline):
+    model = MetaFinanceira
+    extra = 0
+    fields = ('descricao_meta', 'valor_meta', 'prazo')
+    show_change_link = True
+    classes = ('collapse',)
+
+
+class PrecificacaoProdutoInline(admin.TabularInline):
+    model = Precificacao
+    fk_name = 'produto'
+    extra = 0
+    exclude = ('servico',)
+    show_change_link = True
+
+
+class PrecificacaoServicoInline(admin.TabularInline):
+    model = Precificacao
+    fk_name = 'servico'
+    extra = 0
+    exclude = ('produto',)
+    show_change_link = True
+
+
+class NotificacaoInline(admin.TabularInline):
+    model = Notificacao
+    extra = 0
+    fields = (
+        'mensagem_notificacao',
+        'tipo',
+        'status_notificacao',
+        'data_criacao',
+    )
+    readonly_fields = fields
+    can_delete = False
+    show_change_link = True
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(Usuario)
 class UsuarioAdmin(admin.ModelAdmin):
+    form = UsuarioForm
+    inlines = (NegocioInline,)
     list_display = ('nome', 'email', 'tipo_usuario', 'data_cadastro')
     list_filter = ('tipo_usuario', 'data_cadastro')
     search_fields = ('nome', 'email')
@@ -16,10 +117,19 @@ class UsuarioAdmin(admin.ModelAdmin):
 
 @admin.register(Negocio)
 class NegocioAdmin(admin.ModelAdmin):
+    inlines = (
+        ReceitaInline,
+        DespesaInline,
+        ProdutoInline,
+        ServicoInline,
+        MetaFinanceiraInline,
+    )
     list_display = ('nome_negocio', 'segmento', 'usuario', 'meta_mensal', 'capital_inicial')
     list_filter = ('segmento', 'usuario')
     search_fields = ('nome_negocio', 'segmento')
-    readonly_fields = ('usuario',)
+
+    def get_readonly_fields(self, request, obj=None):
+        return ('usuario',) if obj else ()
 
 
 @admin.register(Categoria)
@@ -40,6 +150,7 @@ class ReceitaAdmin(admin.ModelAdmin):
 
 @admin.register(Despesa)
 class DespesaAdmin(admin.ModelAdmin):
+    inlines = (NotificacaoInline,)
     list_display = (
         "descricao_despesa",
         "valor_despesa",
@@ -63,6 +174,7 @@ class DespesaAdmin(admin.ModelAdmin):
 
 @admin.register(Produto)
 class ProdutoAdmin(admin.ModelAdmin):
+    inlines = (PrecificacaoProdutoInline,)
     list_display = ('nome', 'custo', 'preco_venda', 'estoque', 'categoria', 'negocio')
     list_filter = ('categoria', 'negocio')
     search_fields = ('nome', 'negocio__nome_negocio')
@@ -70,6 +182,7 @@ class ProdutoAdmin(admin.ModelAdmin):
 
 @admin.register(Servico)
 class ServicoAdmin(admin.ModelAdmin):
+    inlines = (PrecificacaoServicoInline,)
     list_display = ('nome_servico', 'custo_operacional', 'valor_servico', 'categoria', 'negocio')
     list_filter = ('categoria', 'negocio')
     search_fields = ('nome_servico', 'negocio__nome_negocio')
